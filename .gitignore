@@ -1,8 +1,18 @@
+# Project Specific
+*.SYM
+*.MAP
+*.EXE
+*.cbp
+*.layout
+*.MAP
+*.CPE
+
 # Prerequisites
 *.d
 
 # Object files
 *.o
+*.OBJ
 *.ko
 *.obj
 *.elf
