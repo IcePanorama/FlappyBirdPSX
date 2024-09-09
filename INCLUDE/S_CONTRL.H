@@ -9,6 +9,6 @@
 u_char controller_1[34];
 u_char controller_2[34];
 
-void s_init_controllers (void);
+void s_init_controllers(void);
 
 #endif /* _S_CONTROLLER_H_ */

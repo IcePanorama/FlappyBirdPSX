@@ -6,6 +6,7 @@
 *.layout
 *.MAP
 *.CPE
+format.sh
 
 # Prerequisites
 *.d

@@ -8,8 +8,7 @@
 // Max possible value is 4096.
 #define OT_MAX_LEN (2)
 
-typedef struct ScreenBuffer_s
-{
+typedef struct ScreenBuffer_s {
   DRAWENV draw_env;
   DISPENV disp_env;
   u_long ordering_table[OT_MAX_LEN];
