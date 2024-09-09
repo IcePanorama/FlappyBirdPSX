@@ -7,7 +7,7 @@
 #define DIST_TO_SCREEN (512)
 
 void
-init_video_subsystem (ScreenBuffer_t *sb)
+v_init_video_subsystem (ScreenBuffer_t *sb)
 {
   // FIXME: need to determine NTSC/PAL and make changes accordingly
   SetVideoMode (0);
@@ -36,7 +36,7 @@ init_video_subsystem (ScreenBuffer_t *sb)
 }
 
 void
-display_video (ScreenBuffer_t *sb, POLY_F4 *sprite)
+v_display_video (ScreenBuffer_t *sb, POLY_F4 *sprite)
 {
   static ScreenBuffer_t *curr_sb;
   curr_sb = (curr_sb == sb) ? sb + 1 : sb;

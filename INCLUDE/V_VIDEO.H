@@ -6,7 +6,7 @@
 
 #include "V_SCRBUF.H"
 
-void init_video_subsystem (ScreenBuffer_t *sb);
-void display_video (ScreenBuffer_t *sb, POLY_F4 *sprite);
+void v_init_video_subsystem (ScreenBuffer_t *sb);
+void v_display_video (ScreenBuffer_t *sb, POLY_F4 *sprite);
 
 #endif /* _V_VIDEO_H_ */

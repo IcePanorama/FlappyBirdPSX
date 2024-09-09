@@ -8,6 +8,20 @@
 typedef struct Player_s
 {
   POLY_F4 sprite;
+  SVECTOR position;   // FIXME: We really only need the player's y position
+  u_char *controller; // Controller associated w/ this player.
 } Player_t;
+
+/** Initializes and returns a `Player_t`. */
+Player_t g_create_player (short start_x, short start_y, u_char *controller);
+
+/**
+ *  Sets the vertex coordinate positions for `sprite` using the player's (`p`)
+ *  position data.
+ */
+void g_update_player_sprite_pos (Player_t *p);
+
+// Not sure that I love this being in this file.
+void g_handle_player_input (Player_t *p);
 
 #endif /* _G_PLAYER_H_ */
