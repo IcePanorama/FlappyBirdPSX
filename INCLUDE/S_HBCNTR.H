@@ -7,8 +7,8 @@
 void s_init_hblanks_counter(void);
 /**
  *  Time between two frames. In order for this to work properly, you MUST call
- *  `s_sys_start` before any other functions in your main game loop and you
- * MUST call `s_sys_end ()` as the last function in your main game loop.
+ *  `s_sys_start` before any other functions in your main game loop and you MUST
+ *  call `s_sys_end ()` as the last function in your main game loop.
  */
 int s_delta_time(void);
 void s_sys_start(void);

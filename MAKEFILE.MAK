@@ -28,16 +28,17 @@ FB_objs:
 G_objs:
   echo "Building `Game` object files..."
 	$(CC) -O2 $(CFLAGS) -c -oG_PLAYER.OBJ $(SRC_DIR)\G_PLAYER.C -I $(INCL_DIR)
+	$(CC) -O2 $(CFLAGS) -c -oG_PIPE.OBJ $(SRC_DIR)\G_PIPE.C -I $(INCL_DIR)
 
 S_objs:
   echo "Building `System` object files..."
 	$(CC) -O2 $(CFLAGS) -c -oS_CONTRL.OBJ $(SRC_DIR)\S_CONTRL.C -I $(INCL_DIR)
 	$(CC) -O2 $(CFLAGS) -c -oS_HBCNTR.OBJ $(SRC_DIR)\S_HBCNTR.C -I $(INCL_DIR)
+	$(CC) -O2 $(CFLAGS) -c -oS_MAIN.OBJ $(SRC_DIR)\S_MAIN.C -I $(INCL_DIR)
 
 V_objs:
   echo "Building `Video` object files..."
-	$(CC) -O2 $(CFLAGS) -c -oV_VIDEO.OBJ $(SRC_DIR)\V_VIDEO.C -I $(INCL_DIR)
-
+	$(CC) -O2 $(CFLAGS) -c -oV_MAIN.OBJ $(SRC_DIR)\V_MAIN.C -I $(INCL_DIR)
 
 clean:
 	del *.cpe
