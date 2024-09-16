@@ -9,7 +9,7 @@
 
 static ScreenBuffer_t screen_buffer[2];
 
-void v_init(void) {
+int v_init(void) {
   // FIXME: need to determine NTSC/PAL and make changes accordingly
   SetVideoMode(0);
   GsInitGraph(SCREEN_WIDTH, SCREEN_HEIGHT, GsNONINTER | GsOFSGPU, 1, 0);
@@ -31,9 +31,10 @@ void v_init(void) {
   setRGB0(&screen_buffer[0].draw_env, 0, 0, 0);
   setRGB0(&screen_buffer[1].draw_env, 0, 0, 0);
 
-  screen_buffer[0].curr_sprite = screen_buffer[1].curr_sprite = 0;
+  screen_buffer[0].num_sprites = screen_buffer[1].num_sprites = 0;
 
   SetDispMask(1);
+  return 0;
 }
 
 void v_loop(void) {
@@ -43,7 +44,7 @@ void v_loop(void) {
 
   ClearOTag(curr_sb->ordering_table, OT_MAX_LEN);
 
-  for (i = 0; i < curr_sb->curr_sprite; i++) {
+  for (i = 0; i < curr_sb->num_sprites; i++) {
     AddPrim(&curr_sb->ordering_table[i], curr_sb->sprites[i]);
   }
 
@@ -57,12 +58,16 @@ void v_loop(void) {
 
   DrawOTag(curr_sb->ordering_table);
 
+  // reset sprites array
+  curr_sb->num_sprites = 0;
+
   FntFlush(-1);
 }
 
 void add_sprite_to_sprites(POLY_F4 *sprite) {
-  screen_buffer[0].sprites[screen_buffer[0].curr_sprite] = sprite;
-  screen_buffer[1].sprites[screen_buffer[1].curr_sprite] = sprite;
-  screen_buffer[0].curr_sprite++;
-  screen_buffer[1].curr_sprite++;
+  screen_buffer[0].sprites[screen_buffer[0].num_sprites] = sprite;
+  screen_buffer[1].sprites[screen_buffer[1].num_sprites] = sprite;
+
+  screen_buffer[0].num_sprites++;
+  screen_buffer[1].num_sprites++;
 }

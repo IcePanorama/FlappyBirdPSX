@@ -29,6 +29,7 @@ G_objs:
   echo "Building `Game` object files..."
 	$(CC) -O2 $(CFLAGS) -c -oG_PLAYER.OBJ $(SRC_DIR)\G_PLAYER.C -I $(INCL_DIR)
 	$(CC) -O2 $(CFLAGS) -c -oG_PIPE.OBJ $(SRC_DIR)\G_PIPE.C -I $(INCL_DIR)
+	$(CC) -O2 $(CFLAGS) -c -oG_MANGER.OBJ $(SRC_DIR)\G_MANGER.C -I $(INCL_DIR)
 
 S_objs:
   echo "Building `System` object files..."

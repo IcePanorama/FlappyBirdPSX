@@ -22,4 +22,7 @@ void s_sys_start(void) {
 
 void s_sys_end(void) { counter = GetRCnt(RCntCNT1) - prev_counter; }
 
-int s_delta_time(void) { return counter; }
+int s_delta_time(void) {
+  // printf("%ld\n", GetRCnt (RCntCNT0));
+  return counter;
+}

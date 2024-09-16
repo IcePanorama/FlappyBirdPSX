@@ -4,7 +4,7 @@
 #include "V_SCRBUF.H"
 
 /** Inits entire video subsystem. */
-void v_init(void);
+int v_init(void);
 
 /** Updates entire video subsystem. */
 void v_loop(void);

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2024-09-16
++ Started work on game manager/auto-pipe generation.
++ Created `G_MANGER.H`.
++ Got dev environment set up in Windows 98.
+
+## 2024-09-13
++ Randomly setting the height of the pipe gap.
++ Srand gets seeded using dot clock + user input.
++ Pipes now spawn off screen.
++ Player now presses the jump button at the start of the game to unpause it.
++ Game now starts in a `S_GSTATE_GAME_PAUSED` state for psuedorandomness purposes.
++ Created `update_player_sprite_xy`, refactored G_PLAYER.C.
++ Pipes move from left to right across the screen.
++ Drawing the tops and bottom of pipes sprites.
+
 ## 2024-09-12
 + Created `add_sprite_to_sprites`.
 + Added `sprites`, `curr_sprite` to `ScreenBuffer_t` datatype.
