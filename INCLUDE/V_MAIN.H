@@ -11,4 +11,8 @@ void v_loop(void);
 
 void add_sprite_to_sprites(POLY_F4 *sprite);
 
+#ifdef WIREFRAME
+void v_add_wire_to_wireframes(LINE_F2 *wire);
+#endif /* WIREFRAME */
+
 #endif /* _V_MAIN_H_ */

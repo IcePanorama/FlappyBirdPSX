@@ -33,6 +33,10 @@ int v_init(void) {
 
   screen_buffer[0].num_sprites = screen_buffer[1].num_sprites = 0;
 
+#ifdef WIREFRAME
+  screen_buffer[0].num_wires = screen_buffer[1].num_wires = 0;
+#endif /* WIREFRAME */
+
   SetDispMask(1);
   return 0;
 }
@@ -48,6 +52,16 @@ void v_loop(void) {
     AddPrim(&curr_sb->ordering_table[i], curr_sb->sprites[i]);
   }
 
+#ifdef WIREFRAME
+  for (i = 0; i < curr_sb->num_wires; i++) {
+    AddPrim(&curr_sb->ordering_table[curr_sb->num_sprites + i],
+            curr_sb->wireframes[i]);
+  }
+
+  // reset wireframes array
+  curr_sb->num_wires = 0;
+#endif /* WIREFRAME */
+
   DrawSync(0);
   VSync(0);
 
@@ -56,6 +70,7 @@ void v_loop(void) {
 
   ClearImage(&curr_sb->draw_env.clip, 0, 0, 0);
 
+  // DumpOTag (curr_sb->ordering_table);
   DrawOTag(curr_sb->ordering_table);
 
   // reset sprites array
@@ -64,6 +79,7 @@ void v_loop(void) {
   FntFlush(-1);
 }
 
+// FIXME: Rename this function to fit with the new style.
 void add_sprite_to_sprites(POLY_F4 *sprite) {
   screen_buffer[0].sprites[screen_buffer[0].num_sprites] = sprite;
   screen_buffer[1].sprites[screen_buffer[1].num_sprites] = sprite;
@@ -71,3 +87,13 @@ void add_sprite_to_sprites(POLY_F4 *sprite) {
   screen_buffer[0].num_sprites++;
   screen_buffer[1].num_sprites++;
 }
+
+#ifdef WIREFRAME
+void v_add_wire_to_wireframes(LINE_F2 *wire) {
+  screen_buffer[0].wireframes[screen_buffer[0].num_wires] = wire;
+  screen_buffer[1].wireframes[screen_buffer[1].num_wires] = wire;
+
+  screen_buffer[0].num_wires++;
+  screen_buffer[1].num_wires++;
+}
+#endif /* WIREFRAME */

@@ -5,13 +5,15 @@
 #include <libgte.h>
 #include <sys/types.h>
 
+#include "G_AABB.H"
+
 #define PIPE_WIDTH (16)
 
 typedef struct Pipe_s {
   POLY_F4 top_sprite;
   POLY_F4 bot_sprite;
   SVECTOR position;
-  // int height;
+  AABB_t col_shape[2];  // one for the top, one for bot
 } Pipe_t;
 
 /** Inits and returns a `Pipe_t` instance. */

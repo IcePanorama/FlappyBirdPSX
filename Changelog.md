@@ -1,5 +1,19 @@
 # Changelog
 
+## 2024-09-18
++ Refactored code.
++ Verified that compiling without WIREFRAME still works.
++ Renamed DEBUG compile flag to WIREFRAME.
++ Added debug-only functionality to draw wireframes on top of sprites.
++ Added debug-only function `v_add_wire_to_wireframes` to `V_MAIN`.
++ Added debug-only wireframe to `AABB_t`, created functions to update wireframe `LINE_F2` positions.
++ Removed `_GET_RAND_VY` macro function.
++ Added `AABB_t` to `Player_t` datatype.
++ Created `AABB_t`, `AABB_s` datatype for collision detection.
++ Moved global variable `player` and related functions to `G_MAIN`, refactored code.
++ Created `G_MAIN.H`.
++ Implemented basic game manager/auto-pipe generator.
+
 ## 2024-09-16
 + Started work on game manager/auto-pipe generation.
 + Created `G_MANGER.H`.

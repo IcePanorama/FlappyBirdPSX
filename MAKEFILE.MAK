@@ -1,6 +1,6 @@
 CC=ccpsx
 
-CFLAGS=-ansi -Wall -Werror -pedantic-errors -Wshadow
+CFLAGS=-ansi -Wall -Werror -pedantic-errors -Wshadow -DWIREFRAME
 
 SRC_DIR=SRC
 INCL_DIR=INCLUDE
@@ -26,10 +26,12 @@ FB_objs:
 	$(CC) -O2 $(CFLAGS) -c -oFB_MAIN.OBJ $(SRC_DIR)\FB_MAIN.C -I $(INCL_DIR)
 
 G_objs:
-  echo "Building `Game` object files..."
-	$(CC) -O2 $(CFLAGS) -c -oG_PLAYER.OBJ $(SRC_DIR)\G_PLAYER.C -I $(INCL_DIR)
-	$(CC) -O2 $(CFLAGS) -c -oG_PIPE.OBJ $(SRC_DIR)\G_PIPE.C -I $(INCL_DIR)
+  echo "Building `Gameplay` object files..."
+	$(CC) -O2 $(CFLAGS) -c -oG_AABB.OBJ $(SRC_DIR)\G_AABB.C -I $(INCL_DIR)
+	$(CC) -O2 $(CFLAGS) -c -oG_MAIN.OBJ $(SRC_DIR)\G_MAIN.C -I $(INCL_DIR)
 	$(CC) -O2 $(CFLAGS) -c -oG_MANGER.OBJ $(SRC_DIR)\G_MANGER.C -I $(INCL_DIR)
+	$(CC) -O2 $(CFLAGS) -c -oG_PIPE.OBJ $(SRC_DIR)\G_PIPE.C -I $(INCL_DIR)
+	$(CC) -O2 $(CFLAGS) -c -oG_PLAYER.OBJ $(SRC_DIR)\G_PLAYER.C -I $(INCL_DIR)
 
 S_objs:
   echo "Building `System` object files..."

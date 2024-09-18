@@ -4,6 +4,8 @@
 #include <rand.h>
 #include <stdio.h>
 
+#include "FB_DEFS.H"
+#include "G_AABB.H"
 #include "G_PLAYER.H"
 #include "S_GSTATE.H"
 #include "S_HBCNTR.H"
@@ -26,6 +28,15 @@ Player_t g_create_player(short start_x, short start_y, u_char *controller) {
   p.position.vx = start_x;
   p.position.vy = start_y;
 
+  p.col_shape.position.vx = p.position.vx;
+  p.col_shape.position.vy = p.position.vy;
+  p.col_shape.width = 16;
+  p.col_shape.height = 16;
+
+#ifdef WIREFRAME
+  g_init_AABB_wireframe(&p.col_shape);
+#endif /* WIREFRAME */
+
   update_player_sprite_xy(&p);
 
   p.controller = controller;
@@ -41,9 +52,11 @@ void g_update_player_sprite_pos(Player_t *p) {
   p->position.vy -= p->velocity * s_delta_time() / 4096;
   if (p->velocity > GRAVITY) p->velocity -= VELOCITY_LERP_VAL;
 
-  if (p->position.vy > 240 + 8) p->is_dead = 1;
+  // FIXME: sprite size shouldn't be hardcoded
+  if (p->position.vy > SCREEN_HEIGHT + 8) p->is_dead = 1;
 
-  // TODO: sprite dimensions shouldn't be hardcoded.
+  p->col_shape.position.vx = p->position.vx;
+  p->col_shape.position.vy = p->position.vy;
   update_player_sprite_xy(p);
 }
 
@@ -61,9 +74,9 @@ void g_handle_player_input(Player_t *p) {
   padd = ~((p->controller[2] << 8) | (p->controller[3]));
 
   if (s_curr_game_state == S_GSTATE_GAME_PAUSED && (padd & JUMP_BUTTON_MASK)) {
-    // TODO: REMOVE SEEDING TO A SEPARATE PLACE.
+    // TODO: MOVE SEEDING TO A BETTER PLACE.
     // Currently placed here to make it easy.
-    // Remove kernel.h and rand.h when you remove this from this script.
+    // Remove kernel.h and rand.h when you remove this from the script.
     tmp = GetRCnt(RCntCNT0);
     printf("Seed: %ld\n", tmp);
     srand(tmp);
@@ -77,9 +90,14 @@ void g_handle_player_input(Player_t *p) {
 void g_player_loop(Player_t *p) {
   g_handle_player_input(p);
   g_update_player_sprite_pos(p);
+
+#ifdef WIREFRAME
+  g_update_AABB_wireframe_xy(&p->col_shape);
+#endif /* WIREFRAME */
 }
 
 void update_player_sprite_xy(Player_t *p) {
+  // TODO: sprite dimensions shouldn't be hardcoded.
   setXY4(&p->sprite, (p->position.vx) - 8, (p->position.vy) + 8,
          (p->position.vx) + 8, (p->position.vy) + 8, (p->position.vx) - 8,
          (p->position.vy) - 8, (p->position.vx) + 8, (p->position.vy) - 8);

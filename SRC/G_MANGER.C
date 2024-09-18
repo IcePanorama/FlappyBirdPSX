@@ -1,46 +1,65 @@
-#include <stdio.h>
-
+#include "FB_DEFS.H"
 #include "G_MANGER.H"
 #include "G_PIPE.H"
 #include "V_MAIN.H"
 
-/** Maximum number of pipes which can exist at the same time. */
-#define MAX_NUM_PIPES (1)
+/** Maximum number of pipes that can exist at the same time. */
+#define MAX_NUM_PIPES (2)
 
 static void create_new_pipe(void);
-// static void destroy_pipe (void);
 
 static Pipe_t pipes[MAX_NUM_PIPES];
-static volatile int pipes_head;
-static volatile int pipes_tail;
+/** Most recently generated pipe. */
+static Pipe_t *last_pipe;
+static int num_pipes;
+
+/**
+ *  The factor (in terms of `PIPE_WIDTH`) by which one pipe should be separated
+ *  from the next.
+ */
+static int gap_factor;
 
 void g_manager_init(void) {
-  pipes_head = 0;
-  pipes_tail = 0;
+  num_pipes = 0;
+  last_pipe = 0;
+  gap_factor = 10;
 }
 
 void g_manager_loop(void) {
   int i;
+#ifdef WIREFRAME
+  int j;
+#endif /* WIREFRAME */
 
-  // printf ("pipe cnt: %d\n", pipes_tail - pipes_head);
-  printf("head: %d, tail: %d\n", pipes_head, pipes_tail);
-  if (pipes_tail - pipes_head < MAX_NUM_PIPES) create_new_pipe();
+  if (num_pipes < MAX_NUM_PIPES) {
+    create_new_pipe();
+  }
 
-  for (i = pipes_head; i < pipes_tail; i++) {
-    // printf ("vx pos: %d\n", pipes[i].position.vx);
+  for (i = 0; i < num_pipes; i++) {
     if (pipes[i].position.vx < -PIPE_WIDTH) {
-      pipes_head++;
-      //     pipes_head %= MAX_NUM_PIPES;
+      pipes[i] = g_create_pipe();
+      last_pipe = &pipes[i];
     }
 
     g_pipe_loop(&pipes[i]);
     add_sprite_to_sprites(&pipes[i].top_sprite);
     add_sprite_to_sprites(&pipes[i].bot_sprite);
+
+#ifdef WIREFRAME
+    for (j = 0; j < NUM_WIREFRAME_LNS; j++) {
+      v_add_wire_to_wireframes(&pipes[i].col_shape[0].wireframe[j]);
+      v_add_wire_to_wireframes(&pipes[i].col_shape[1].wireframe[j]);
+    }
+#endif /* WIREFRAME */
   }
 }
 
 void create_new_pipe(void) {
-  pipes[pipes_tail] = g_create_pipe();
-  pipes_tail++;
-  // pipes_tail %= MAX_NUM_PIPES;
+  if (last_pipe != 0 &&
+      (SCREEN_WIDTH - (*last_pipe).position.vx) < (PIPE_WIDTH * gap_factor))
+    return;
+
+  pipes[num_pipes] = g_create_pipe();
+  last_pipe = &pipes[num_pipes];
+  num_pipes++;
 }

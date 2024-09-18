@@ -1,4 +1,5 @@
 #include <rand.h>
+#include <stdio.h>
 
 #include "FB_DEFS.H"
 #include "G_PIPE.H"
@@ -6,12 +7,17 @@
 
 #define HALF_PIPE_WIDTH (8)
 #define GAP_SIZE (60)
-#define HALF_GAP_SIZE (30)
-#define GAP_PLUS_FIVE (65)
-#define _GET_RAND_VY() \
-  (rand() % (SCREEN_HEIGHT - 2 * (GAP_PLUS_FIVE)) + (GAP_PLUS_FIVE))
+#define HALF_GAP_SIZE (GAP_SIZE >> 1)
+#define GAP_PLUS_FIVE (GAP_SIZE + 5)
 
 static void update_pipe_sprite_xy(Pipe_t *p);
+
+// Just to make the code a bit cleaner.
+enum PipeColShapeTypes_e {
+  PIPE_TOP_COL_SHAPE,
+  PIPE_BOT_COL_SHAPE,
+  NUM_PIPE_COL_SHAPES
+};
 
 Pipe_t g_create_pipe(void) {
   Pipe_t p;
@@ -25,7 +31,27 @@ Pipe_t g_create_pipe(void) {
   setRGB0(&p.bot_sprite, 255, 0, 0);
 
   p.position.vx = SCREEN_WIDTH + PIPE_WIDTH;
-  p.position.vy = _GET_RAND_VY();
+  p.position.vy =
+      rand() % (SCREEN_HEIGHT - 2 * (GAP_PLUS_FIVE)) + (GAP_PLUS_FIVE);
+
+  p.col_shape[PIPE_TOP_COL_SHAPE].position.vx = p.position.vx;
+  p.col_shape[PIPE_TOP_COL_SHAPE].width = HALF_PIPE_WIDTH << 1;
+  p.col_shape[PIPE_TOP_COL_SHAPE].height = p.position.vy - HALF_GAP_SIZE;
+  p.col_shape[PIPE_TOP_COL_SHAPE].position.vy =
+      p.col_shape[PIPE_TOP_COL_SHAPE].height >> 1;
+
+  p.col_shape[PIPE_BOT_COL_SHAPE].position.vx = p.position.vx;
+  p.col_shape[PIPE_BOT_COL_SHAPE].width = HALF_PIPE_WIDTH << 1;
+  p.col_shape[PIPE_BOT_COL_SHAPE].height =
+      SCREEN_HEIGHT - (p.position.vy + HALF_GAP_SIZE);
+  p.col_shape[PIPE_BOT_COL_SHAPE].position.vy =
+      p.position.vy + HALF_GAP_SIZE +
+      (p.col_shape[PIPE_BOT_COL_SHAPE].height >> 1);
+
+#ifdef WIREFRAME
+  g_init_AABB_wireframe(&p.col_shape[PIPE_TOP_COL_SHAPE]);
+  g_init_AABB_wireframe(&p.col_shape[PIPE_BOT_COL_SHAPE]);
+#endif /* WIREFRAME */
 
   update_pipe_sprite_xy(&p);
 
@@ -60,15 +86,13 @@ void update_pipe_sprite_xy(Pipe_t *p) {
 
 void g_pipe_loop(Pipe_t *p) {
   p->position.vx -= 50 * s_delta_time() / 4096;
+  p->col_shape[PIPE_TOP_COL_SHAPE].position.vx = p->position.vx;
+  p->col_shape[PIPE_BOT_COL_SHAPE].position.vx = p->position.vx;
 
-  /*
-    //TODO: delete pipe when it goes off screen.
-    if (p->position.vx < 0)
-    {
-      p->position.vx = SCREEN_WIDTH + PIPE_WIDTH;
-      p->position.vy = _GET_RAND_VY();
-    }
-  */
+#ifdef WIREFRAME
+  g_update_AABB_wireframe_xy(&p->col_shape[PIPE_TOP_COL_SHAPE]);
+  g_update_AABB_wireframe_xy(&p->col_shape[PIPE_BOT_COL_SHAPE]);
+#endif /* WIREFRAME */
 
   update_pipe_sprite_xy(p);
 }

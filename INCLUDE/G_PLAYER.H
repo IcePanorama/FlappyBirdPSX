@@ -5,20 +5,23 @@
 #include <libgte.h>
 #include <sys/types.h>
 
+#include "G_AABB.H"
+
 typedef struct Player_s {
   POLY_F4 sprite;
   SVECTOR position;    // FIXME: We really only need the player's y position
   u_char *controller;  // Controller associated w/ this player.
   int velocity;
   short is_dead;
+  AABB_t col_shape;
 } Player_t;
 
 /** Initializes and returns a `Player_t`. */
 Player_t g_create_player(short start_x, short start_y, u_char *controller);
 
 /**
- *  Sets the vertex coordinate positions for `sprite` using the player's (`p`)
- *  position data.
+ *  Sets the vertex coordinate positions for `sprite` using the player's, `p`,
+ *  `position`.
  */
 void g_update_player_sprite_pos(Player_t *p);
 
