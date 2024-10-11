@@ -1,10 +1,9 @@
-#ifndef _FB_DEFINES_H_
-#define _FB_DEFINES_H_
+#ifndef _FLAPPY_BIRD_PSX_GLOBAL_DEFS_H_
+#define _FLAPPY_BIRD_PSX_GLOBAL_DEFS_H_
 
 #define SCREEN_WIDTH (320)
 #define SCREEN_HEIGHT (240)
 
-// Two triangles w/ one shared side.
-#define NUM_WIREFRAME_LNS (5)
+#define COLSHP_NUM_WIREFRAME_LNS (4)
 
-#endif /* _FB_DEFINES_H_ */
+#endif /* _FLAPPY_BIRD_PSX_GLOBAL_DEFS_H_ */

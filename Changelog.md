@@ -1,5 +1,18 @@
 # Changelog
 
+## 2024-09-?? to 2024-10-??
++ Reimplemented collision shapes, created separate positional collision shapes for pipes.
++ Reimplemented game state, game state management.
++ Reimplemented spawning/despawning of pipes, now through a pipes pool.
++ Reimplemented `Pipes_t` data type.
++ Reimplemented `Player_t` data type, reimplemented user input handling using commands.
++ Created `Sprite_t` data type, implemented sprite pool.
++ Implemented 'command' design pattern for handling user input.
++ Implemented 'game loop' design pattern.
++ Reworked delta time implementation.
++ Created `STDINT.H`.
++ Refactored entire code base.
+
 ## 2024-09-18
 + Refactored code.
 + Verified that compiling without WIREFRAME still works.

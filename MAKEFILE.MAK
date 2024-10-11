@@ -1,6 +1,6 @@
 CC=ccpsx
 
-CFLAGS=-ansi -Wall -Werror -pedantic-errors -Wshadow -DWIREFRAME
+CFLAGS=-ansi -Wall -Werror -pedantic-errors -Wshadow -DDEBUG_BUILD
 
 SRC_DIR=SRC
 INCL_DIR=INCLUDE
@@ -13,35 +13,22 @@ MAP_FILE=MEM.MAP
 # removing clean dependency from this target fixes bug where it fails 50% of the
 # time.
 all: obj_files
-  echo "Building ..\$(CPE_FILE), ..\$(SYM_FILE), and ..\$(MAP_FILE)..."
-  $(CC) -O2 -Xo$80020000 *.OBJ -o$(CPE_FILE),$(SYM_FILE),$(MAP_FILE) -L \
-    $(LIBRARY_PATH) -llibpad -llibc2
+	echo "Building ..\$(CPE_FILE), ..\$(SYM_FILE), and ..\$(MAP_FILE)..."
+  	$(CC) -O2 -Xo$80020000 *.OBJ -o$(CPE_FILE),$(SYM_FILE),$(MAP_FILE) -L $(LIBRARY_PATH) -llibpad -llibc2
 	cpe2x /ca $(CPE_FILE)
 
-obj_files: FB_objs G_objs S_objs V_objs
+obj_files:
   echo "Building object files..."
-
-FB_objs:
-  echo "Building `Flappy Bird` object files..."
-	$(CC) -O2 $(CFLAGS) -c -oFB_MAIN.OBJ $(SRC_DIR)\FB_MAIN.C -I $(INCL_DIR)
-
-G_objs:
-  echo "Building `Gameplay` object files..."
-	$(CC) -O2 $(CFLAGS) -c -oG_AABB.OBJ $(SRC_DIR)\G_AABB.C -I $(INCL_DIR)
-	$(CC) -O2 $(CFLAGS) -c -oG_MAIN.OBJ $(SRC_DIR)\G_MAIN.C -I $(INCL_DIR)
-	$(CC) -O2 $(CFLAGS) -c -oG_MANGER.OBJ $(SRC_DIR)\G_MANGER.C -I $(INCL_DIR)
-	$(CC) -O2 $(CFLAGS) -c -oG_PIPE.OBJ $(SRC_DIR)\G_PIPE.C -I $(INCL_DIR)
-	$(CC) -O2 $(CFLAGS) -c -oG_PLAYER.OBJ $(SRC_DIR)\G_PLAYER.C -I $(INCL_DIR)
-
-S_objs:
-  echo "Building `System` object files..."
-	$(CC) -O2 $(CFLAGS) -c -oS_CONTRL.OBJ $(SRC_DIR)\S_CONTRL.C -I $(INCL_DIR)
-	$(CC) -O2 $(CFLAGS) -c -oS_HBCNTR.OBJ $(SRC_DIR)\S_HBCNTR.C -I $(INCL_DIR)
-	$(CC) -O2 $(CFLAGS) -c -oS_MAIN.OBJ $(SRC_DIR)\S_MAIN.C -I $(INCL_DIR)
-
-V_objs:
-  echo "Building `Video` object files..."
-	$(CC) -O2 $(CFLAGS) -c -oV_MAIN.OBJ $(SRC_DIR)\V_MAIN.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oMAIN.OBJ $(SRC_DIR)\MAIN.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oVIDEO.OBJ $(SRC_DIR)\VIDEO.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oCONTROL.OBJ $(SRC_DIR)\CONTROL.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oCOMMAND.OBJ $(SRC_DIR)\COMMAND.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oSPRITES.OBJ $(SRC_DIR)\SPRITES.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oPLAYER.OBJ $(SRC_DIR)\PLAYER.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oGAMEMNGR.OBJ $(SRC_DIR)\GAMEMNGR.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oPIPES.OBJ $(SRC_DIR)\PIPES.C -I $(INCL_DIR)
+  $(CC) -O2 $(CFLAGS) -c -oCOLSHAPE.OBJ $(SRC_DIR)\COLSHAPE.C -I $(INCL_DIR)
+  #$(CC) -O2 $(CFLAGS) -c -oPOSCSHAP.OBJ $(SRC_DIR)\POSCSHAP.C -I $(INCL_DIR)
 
 clean:
 	del *.cpe
