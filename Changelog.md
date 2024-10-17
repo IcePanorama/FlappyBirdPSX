@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2024-09-?? to 2024-10-??
++ Started reimplementing everything lol
++ Refactored/restructured entire code base again.
 + Reimplemented collision shapes, created separate positional collision shapes for pipes.
 + Reimplemented game state, game state management.
 + Reimplemented spawning/despawning of pipes, now through a pipes pool.

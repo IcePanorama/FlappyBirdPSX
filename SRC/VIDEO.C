@@ -1,9 +1,3 @@
-#include "video.h"
-
-#include "colshape.h"
-#include "fb_defs.h"
-#include "sprites.h"
-
 /* Don't touch! CC seems really particular about the order of these. */
 #include <sys/types.h>
 #include <libgte.h>
@@ -11,6 +5,11 @@
 #include <libgs.h>
 #include <libetc.h>
 /******************/
+
+#include "compnts/sprites.h"
+#include "sys/fb_ints.h"
+#include "sys/fb_defs.h"
+#include "video.h"
 
 #ifdef DEBUG_BUILD
   #include <assert.h>
@@ -29,6 +28,8 @@ typedef struct ScreenBuffer_s
 
 static ScreenBuffer_t screen_buffer[2];
 
+static void init_screen_buffers (ScreenBuffer_t *sb);
+
 void
 init_video_subsystem (void)
 {
@@ -44,72 +45,45 @@ init_video_subsystem (void)
 	SetGeomOffset (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 	SetGeomScreen (DIST_TO_SCREEN);
 
-  //TODO: I may be able to afford 480i, given how simple FB is.
-	SetDefDrawEnv (&screen_buffer[0].draw_env, 0,   0, SCREEN_WIDTH,
-                 SCREEN_HEIGHT);
-	SetDefDrawEnv (&screen_buffer[1].draw_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
-                 SCREEN_HEIGHT);
-	SetDefDispEnv (&screen_buffer[0].disp_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
-                 SCREEN_HEIGHT);
-	SetDefDispEnv (&screen_buffer[1].disp_env, 0,   0, SCREEN_WIDTH,
-                 SCREEN_HEIGHT);
-
-  screen_buffer[0].draw_env.isbg = screen_buffer[1].draw_env.isbg = 1;
-  setRGB0(&screen_buffer[0].draw_env, 100, 100, 100);
-  setRGB0(&screen_buffer[1].draw_env, 100, 100, 100);
+  init_screen_buffers (screen_buffer);
 
 	SetDispMask (1);
 }
 
-// FIXME: needs refactoring/cleaning up, badly!
+void
+init_screen_buffers (ScreenBuffer_t *sb)
+{
+  //TODO: I may be able to afford 480i, given how simple FB is.
+	SetDefDrawEnv (&sb[0].draw_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	SetDefDrawEnv (&sb[1].draw_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
+                 SCREEN_HEIGHT);
+	SetDefDispEnv (&sb[0].disp_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
+                 SCREEN_HEIGHT);
+	SetDefDispEnv (&sb[1].disp_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+  sb[0].draw_env.isbg = sb[1].draw_env.isbg = 1;
+  setRGB0(&sb[0].draw_env, 100, 100, 100);
+  setRGB0(&sb[1].draw_env, 100, 100, 100);
+}
+
 void
 render_screen (void)
 {
-  static ScreenBuffer_t *curr_sb = screen_buffer;
-  u_long i;
-  u_long j;
+  uint8_t i;
   u_long ot_idx = 0;
-
+  static ScreenBuffer_t *curr_sb = screen_buffer;
   curr_sb = (curr_sb == screen_buffer) ? screen_buffer + 1 : screen_buffer;
 
   ClearOTag (curr_sb->ordering_table, OT_MAX_LEN);
 
-  // Drawn in reverse so the player's always on top!
-  for (i = SPRITE_POOL_MAX_NUM_SPRITES; i > 0; i--)
+  for (i = 0; i < sp_num_sprites; i++)
   {
-    if (sprite_pool[i - 1].in_use)
-    {
-      // FIXME: how should we handle `ot_idx >= OT_MAX_LEN` in release builds?
 #ifdef DEBUG_BUILD
-      assert(ot_idx < OT_MAX_LEN);
+    assert(ot_idx < OT_MAX_LEN);
 #endif /* DEBUG_BUILD */
-      AddPrim (&curr_sb->ordering_table[ot_idx], &sprite_pool[i - 1].sprite);
-      ot_idx++;
-    }
-  }
 
-  for (i = 0; i < COLSHAPE_POOL_MAX_NUM_COLSHAPES; i++)
-  {
-    if (col_shape_pool[i].in_use)
-    {
-/*
-      printf ("ot_idx: %ld\n", ot_idx);
-      // this feels SUPER inefficient. There's gotta be a better way lmao
-      AddPrims(&curr_sb->ordering_table[ot_idx], &col_shape_pool[i].wireframe_lines,
-               &col_shape_pool[i].wireframe_lines + COLSHP_NUM_WIREFRAME_LNS - 1);
-      ot_idx += COLSHP_NUM_WIREFRAME_LNS;
-      break;
-*/
-      for (j = 0; j < COLSHP_NUM_WIREFRAME_LNS; j++)
-      {
-      // FIXME: how should we handle `ot_idx >= OT_MAX_LEN` in release builds?
-#ifdef DEBUG_BUILD
-        assert(ot_idx < OT_MAX_LEN);
-#endif /* DEBUG_BUILD */
-        AddPrim (&curr_sb->ordering_table[ot_idx], &col_shape_pool[i].wireframe_lines[j]);
-        ot_idx++;
-      }
-    }
+    AddPrim (&curr_sb->ordering_table[ot_idx], &sp_sprite_pool[i].p4_sprite);
+    ot_idx += sp_num_sprites;
   }
 
   DrawSync (0);
@@ -120,7 +94,7 @@ render_screen (void)
 
   ClearImage (&curr_sb->draw_env.clip, 100, 100, 100);
 
-//  DumpOTag (curr_sb->ordering_table);
+  DumpOTag (curr_sb->ordering_table);
   DrawOTag (curr_sb->ordering_table);
 
   FntFlush (-1);
