@@ -1,6 +1,7 @@
 #ifndef _PHYSICS_COMPONENT_H_
 #define _PHYSICS_COMPONENT_H_
 
+#include "sys/fb_bools.h"
 #include "sys/fb_ints.h"
 #include "sys/fb_vecs.h"
 
@@ -9,8 +10,10 @@
 typedef struct PhysicsCompnt_s
 {
   int8_t i8_parent_id;
+  bool_t b_use_gravity;
   Vec2_t v2_position;
-  int32_t i32_velocity;
+  Vec2_t v2_velocity;
+  //  int32_t i32_velocity;
 } PhysicsCompnt_t;
 
 extern PhysicsCompnt_t pc_physics_pool[(PHYSICS_MAX_NUM_PHYSICS_COMP)];

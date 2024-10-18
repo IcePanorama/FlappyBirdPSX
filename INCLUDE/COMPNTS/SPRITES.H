@@ -10,6 +10,7 @@
 /******************/
 
 #include "sys/fb_ints.h"
+#include "sys/fb_vecs.h"
 
 #define SPRITES_MAX_NUM_SPRITES (32)
 
@@ -17,6 +18,9 @@ typedef struct SpriteCompnt_s
 {
   int8_t i8_parent_id;
   POLY_F4 p4_sprite;
+  uint8_t u8_width;
+  uint8_t u8_height;
+  void (* update)(struct SpriteCompnt_s *s, Vec2_t *v2_pos); // Sprite update function
 } SpriteCompnt_t;
 
 extern SpriteCompnt_t sp_sprite_pool[(SPRITES_MAX_NUM_SPRITES)];

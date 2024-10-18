@@ -1,4 +1,4 @@
-#include "gamemngr.h"
+#include "game/gamemngr.h"
 #include "sys/fb_bools.h"
 #include "video.h"
 

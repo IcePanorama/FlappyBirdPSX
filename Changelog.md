@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2024-09-?? to 2024-10-??
++ Finally got movement feeling pretty close to the original.
 + Started reimplementing everything lol
 + Refactored/restructured entire code base again.
 + Reimplemented collision shapes, created separate positional collision shapes for pipes.

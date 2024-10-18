@@ -1,9 +1,12 @@
 #include "compnts/physics.h"
+#include "sys/fb_defs.h"
 
 #ifdef DEBUG_BUILD
-  #include <stdio.h>
-  #include <assert.h>
+#include <stdio.h>
+#include <assert.h>
 #endif /* DEBUG_BUILD */
+
+#define GRAVITY (4) // approx. for 9.8 / 2, in m/s^(2)
 
 PhysicsCompnt_t pc_physics_pool[(PHYSICS_MAX_NUM_PHYSICS_COMP)] = {{0}};
 uint8_t u8_pc_num_physics = 0;
@@ -39,7 +42,7 @@ destroy_physics_compnt (int8_t i8_id)
   assert(u8_idx != (uint8_t)-1);
 #endif /* DEBUG_BUILD */
 
-  /* if the given sprite is last active sprite, swapping isn't necessary. */
+  /* if the given sprite is the last active sprite, swapping isn't necessary. */
   if (u8_idx != (u8_pc_num_physics - 1))
   {
     pc_tmp = pc_physics_pool[u8_idx];
@@ -71,17 +74,26 @@ get_physics_compnt_with_id (int8_t i8_id)
   return 0;
 }
 
-// LO: finish physics component update function
 void
 update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
 {
-  pc->position.y -= pc->velocity;
-  if (pc->position.y >= SCREEN_HEIGHT)
-    pc->position.y = 0;
+  pc->v2_position.y += -pc->v2_velocity.y;
+  if (pc->v2_position.y >= (SCREEN_HEIGHT << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+    pc->v2_position.y =
+      -(HALF_SCREEN_HEIGHT << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
-//TODO: rename to y_velocity
-  if (pc->velocity > GRAVITY)
-    ;
-  pc->velocity -= GRAVITY;
+  if (pc->b_use_gravity)
+  {
+    if (pc->v2_velocity.y > 0)
+      pc->v2_velocity.y -= (1 << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+    else
+      pc->v2_velocity.y -= (GRAVITY);
+  }
 
+  pc->v2_position.x += pc->v2_velocity.x;
+
+  v2_output_pos->x = pc->v2_position.x;
+  v2_output_pos->y = pc->v2_position.y;
 }
+
+#undef GRAVITY

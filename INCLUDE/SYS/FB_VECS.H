@@ -1,6 +1,8 @@
 #ifndef _FLAPPY_BIRD_PSX_VECTORS_H_
 #define _FLAPPY_BIRD_PSX_VECTORS_H_
 
+#include "sys/fb_ints.h"
+
 typedef struct Vec2_s
 {
   int16_t x;

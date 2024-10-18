@@ -12,8 +12,8 @@
 #include "video.h"
 
 #ifdef DEBUG_BUILD
-  #include <assert.h>
-  #include <stdio.h>
+#include <assert.h>
+#include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define DIST_TO_SCREEN (512)
@@ -37,29 +37,29 @@ init_video_subsystem (void)
   SetVideoMode (0);
   GsInitGraph (SCREEN_WIDTH, SCREEN_HEIGHT, GsNONINTER|GsOFSGPU, 1, 0);
 
-	FntLoad (960, 256);
-	SetDumpFnt (FntOpen (0, 8, SCREEN_WIDTH, 64, 0, 512));
-	SetGraphDebug (0);
+  FntLoad (960, 256);
+  SetDumpFnt (FntOpen (0, 8, SCREEN_WIDTH, 64, 0, 512));
+  SetGraphDebug (0);
 
-	InitGeom ();  // Init GTE
-	SetGeomOffset (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-	SetGeomScreen (DIST_TO_SCREEN);
+  InitGeom ();  // Init GTE
+  SetGeomOffset (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+  SetGeomScreen (DIST_TO_SCREEN);
 
   init_screen_buffers (screen_buffer);
 
-	SetDispMask (1);
+  SetDispMask (1);
 }
 
 void
 init_screen_buffers (ScreenBuffer_t *sb)
 {
   //TODO: I may be able to afford 480i, given how simple FB is.
-	SetDefDrawEnv (&sb[0].draw_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	SetDefDrawEnv (&sb[1].draw_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
-                 SCREEN_HEIGHT);
-	SetDefDispEnv (&sb[0].disp_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
-                 SCREEN_HEIGHT);
-	SetDefDispEnv (&sb[1].disp_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  SetDefDrawEnv (&sb[0].draw_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  SetDefDrawEnv (&sb[1].draw_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
+		 SCREEN_HEIGHT);
+  SetDefDispEnv (&sb[0].disp_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
+		 SCREEN_HEIGHT);
+  SetDefDispEnv (&sb[1].disp_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
   sb[0].draw_env.isbg = sb[1].draw_env.isbg = 1;
   setRGB0(&sb[0].draw_env, 100, 100, 100);
