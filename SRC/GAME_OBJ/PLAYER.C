@@ -1,6 +1,7 @@
 #include "game_obj/player.h"
 #include "compnts/sprites.h"
 #include "compnts/physics.h"
+#include "game_obj/entityid.h"
 #include "sys/fb_defs.h"
 #include "utils.h"
 
@@ -25,7 +26,6 @@ create_player_entity (void)
   pe.u8_width = pe.u8_height = 16;
 
   init_player_physics_compnt (&pe, &v2_pos);
-  pe.ppc_physics_compnt = 0; // set this to NULL when we're done w/ it.
 
   init_player_sprite_compnt (&pe);
   if (&pe.psc_sprite_compnt != 0)
@@ -55,6 +55,8 @@ init_player_physics_compnt (PlayerEntity_t *pe, Vec2_t *v2_output_pos)
 
   v2_output_pos->x = pe->ppc_physics_compnt->v2_position.x;
   v2_output_pos->y = pe->ppc_physics_compnt->v2_position.y;
+
+  pe->ppc_physics_compnt = 0; // set this to NULL when we're done w/ it.
 }
 
 //TODO: make macro version of this function.
@@ -94,7 +96,6 @@ update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
   u8_half_width = sc->u8_width >> 1;
   u8_half_height = sc->u8_height >> 1;
 
-  // FIXME: player x pos should be constant
   v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
 
   u16_left_x  = v2_cs_pos.x - u8_half_width;
@@ -113,6 +114,7 @@ void
 destroy_player_entity (PlayerEntity_t *pe)
 {
   destroy_sprite (pe->eid_id);
+  destroy_physics_compnt (pe->eid_id);
 }
 
 void

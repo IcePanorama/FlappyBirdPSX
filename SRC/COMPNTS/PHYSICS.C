@@ -1,4 +1,5 @@
 #include "compnts/physics.h"
+#include "game/signals.h"
 #include "sys/fb_defs.h"
 
 #ifdef DEBUG_BUILD
@@ -8,8 +9,22 @@
 
 #define GRAVITY (4) // approx. for 9.8 / 2, in m/s^(2)
 
+/** For position-related signals. */
+#define BUFFER_ZONE_SIZE (64) // No sprite should be larger than 64x64.
+#define BELOW_SCREEN_Y \
+(((HALF_SCREEN_HEIGHT) + (BUFFER_ZONE_SIZE)) \
+  << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+#define ABOVE_SCREEN_Y (-(BELOW_SCREEN_Y))
+#define OFF_SCREEN_RIGHT \
+(((HALF_SCREEN_WIDTH) + (BUFFER_ZONE_SIZE)) \
+  << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+#define OFF_SCREEN_LEFT (-(OFF_SCREEN_RIGHT))
+/**********************************/
+
 PhysicsCompnt_t pc_physics_pool[(PHYSICS_MAX_NUM_PHYSICS_COMP)] = {{0}};
 uint8_t u8_pc_num_physics = 0;
+
+static void manage_screen_position_signals (PhysicsCompnt_t *pc);
 
 void
 create_new_physics_compnt (int8_t i8_id)
@@ -78,9 +93,6 @@ void
 update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
 {
   pc->v2_position.y += -pc->v2_velocity.y;
-  if (pc->v2_position.y >= (SCREEN_HEIGHT << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
-    pc->v2_position.y =
-      -(HALF_SCREEN_HEIGHT << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   if (pc->b_use_gravity)
   {
@@ -94,6 +106,32 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
 
   v2_output_pos->x = pc->v2_position.x;
   v2_output_pos->y = pc->v2_position.y;
+
+  manage_screen_position_signals (pc);
+}
+
+void
+pc_init_physics_compnt_pool (void)
+{
+  memset (&pc_physics_pool, 0,
+          sizeof (PhysicsCompnt_t) * PHYSICS_MAX_NUM_PHYSICS_COMP);
+}
+
+void
+manage_screen_position_signals (PhysicsCompnt_t *pc)
+{
+  if (pc->v2_position.x < (OFF_SCREEN_LEFT))
+    si_send_signal(pc->i8_parent_id, SIG_OFF_SCREEN_LEFT);
+  else if (pc->v2_position.x > OFF_SCREEN_RIGHT)
+    si_send_signal(pc->i8_parent_id, (SIG_OFF_SCREEN_RIGHT));
+  else if (pc->v2_position.y > (BELOW_SCREEN_Y))
+    si_send_signal(pc->i8_parent_id, SIG_BELOW_SCREEN);
+  else if (pc->v2_position.y < (ABOVE_SCREEN_Y))
+    si_send_signal(pc->i8_parent_id, SIG_ABOVE_SCREEN);
 }
 
 #undef GRAVITY
+#undef ABOVE_SCREEN_Y
+#undef BELOW_SCREEN_Y
+#undef OFF_SCREEN_LEFT
+#undef OFF_SCREEN_RIGHT

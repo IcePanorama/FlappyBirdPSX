@@ -16,7 +16,7 @@
 
 typedef struct SpriteCompnt_s
 {
-  int8_t i8_parent_id;
+  uint8_t i8_parent_id;
   POLY_F4 p4_sprite;
   uint8_t u8_width;
   uint8_t u8_height;
@@ -27,6 +27,7 @@ extern SpriteCompnt_t sp_sprite_pool[(SPRITES_MAX_NUM_SPRITES)];
 //FIXME: add type to name
 extern uint8_t sp_num_sprites;
 
+void sc_init_sprite_compnt_pool (void);
 void create_new_sprite (int8_t i8_id);
 void destroy_sprite (int8_t i8_id);
 SpriteCompnt_t *get_sprite_with_id (int8_t i8_id);

@@ -27,7 +27,7 @@ ctrl_handle_user_input (CommandList_t *cmdl, void *entity)
   if (uc_controller_1[0] != 0)
   {
 #ifdef DEBUG_BUILD
-    printf ("Padd error!");
+    printf ("Padd error!\n");
 #endif /* DEBUG_BUILD */
     return;
   }

@@ -9,16 +9,17 @@
 
 typedef struct PhysicsCompnt_s
 {
-  int8_t i8_parent_id;
+  //FIXME: rename to `u8_parent_id`, no clue why this is signed.
+  uint8_t i8_parent_id;
   bool_t b_use_gravity;
   Vec2_t v2_position;
   Vec2_t v2_velocity;
-  //  int32_t i32_velocity;
 } PhysicsCompnt_t;
 
 extern PhysicsCompnt_t pc_physics_pool[(PHYSICS_MAX_NUM_PHYSICS_COMP)];
 extern uint8_t u8_pc_num_physics;
 
+void pc_init_physics_compnt_pool (void);
 void create_new_physics_compnt (int8_t i8_id);
 void destroy_physics_compnt (int8_t i8_id);
 PhysicsCompnt_t *get_physics_compnt_with_id (int8_t i8_id);

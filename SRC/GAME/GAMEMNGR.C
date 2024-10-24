@@ -1,9 +1,16 @@
 #include "game/gamemngr.h"
 #include "compnts/physics.h"
 #include "compnts/sprites.h"
+#include "game/signals.h"
 #include "game_obj/player.h"
 #include "input/cmdlist.h"
 #include "input/controlr.h"
+
+/* for testing */
+#include "sys/fb_defs.h"
+
+#include <stdio.h>
+/***************/
 
 #define MAX_NUM_ENTITIES (32)
 
@@ -11,10 +18,12 @@ PlayerEntity_t player;
 
 static void update_physics_compnts (Vec2_t *v2_output_pos);
 static void update_sprites (Vec2_t *v2_input_pos);
+static void init_compnt_pools (void);
 
 void
 init_game (void)
 {
+  init_compnt_pools ();
   ctrl_init_controllers ();
   player = create_player_entity ();
 }
@@ -22,10 +31,20 @@ init_game (void)
 void
 update_game (void)
 {
-  Vec2_t v2_entity_pos[MAX_NUM_ENTITIES] = {{0}};
+  static Vec2_t v2_entity_pos[MAX_NUM_ENTITIES] = {{0}};
 
   ctrl_handle_user_input (cmdl_command_lists[gs_curr_game_state],
                           (void *)&player);
+
+  if (si_check_inbox (player.eid_id) == SIG_BELOW_SCREEN)
+  {
+    player.ppc_physics_compnt = get_physics_compnt_with_id(player.eid_id);
+    player.ppc_physics_compnt->v2_position.y =
+      ((-(HALF_SCREEN_HEIGHT) - player.u8_height)
+      << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
+    player.ppc_physics_compnt->v2_velocity.y = 256;
+    player.ppc_physics_compnt = 0;
+  }
   update_physics_compnts (v2_entity_pos);
   update_sprites (v2_entity_pos);
 }
@@ -56,6 +75,14 @@ update_sprites (Vec2_t *v2_input_pos)
   {
     (*sp_sprite_pool[i].update)(&sp_sprite_pool[i], &v2_input_pos[i]);
   }
+}
+
+void
+init_compnt_pools (void)
+{
+  pc_init_physics_compnt_pool ();
+  sc_init_sprite_compnt_pool ();
+  si_init_signal_inboxes ();
 }
 
 #undef MAX_NUM_ENTITIES

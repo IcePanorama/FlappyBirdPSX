@@ -1,18 +1,17 @@
 #ifndef _PLAYER_ENTITY_H_
 #define _PLAYER_ENTITY_H_
 
-#include "game_obj/entityid.h"
 #include "sys/fb_ints.h"
-#include "sys/fb_vecs.h"
+#include "sys/fb_vecs.h"  // FIXME: remove, unused in this header.
 
 typedef struct PlayerEntity_s
 {
-  EntityID_t eid_id;
+  uint8_t eid_id;
   struct PhysicsCompnt_s *ppc_physics_compnt;
   uint8_t u8_width;
   uint8_t u8_height;
   struct SpriteCompnt_s *psc_sprite_compnt;
-  uint8_t flags;
+  uint8_t flags;  // FIXME: currently unused, remove.
 } PlayerEntity_t;
 
 PlayerEntity_t create_player_entity (void);
