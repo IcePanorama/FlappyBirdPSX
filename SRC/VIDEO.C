@@ -66,6 +66,7 @@ init_screen_buffers (ScreenBuffer_t *sb)
   setRGB0(&sb[1].draw_env, 100, 100, 100);
 }
 
+//FIXME: needs refactoring!
 void
 render_screen (void)
 {
@@ -76,15 +77,19 @@ render_screen (void)
 
   ClearOTag (curr_sb->ordering_table, OT_MAX_LEN);
 
-  for (i = 0; i < sp_num_sprites; i++)
+  for (i = 1; i < sp_num_sprites; i++)
   {
 #ifdef DEBUG_BUILD
     assert(ot_idx < OT_MAX_LEN);
 #endif /* DEBUG_BUILD */
 
     AddPrim (&curr_sb->ordering_table[ot_idx], &sp_sprite_pool[i].p4_sprite);
-    ot_idx += sp_num_sprites;
+    ot_idx++;
   }
+
+  /* Draw player on top. This assume's player is always sprite 0. */
+  AddPrim (&curr_sb->ordering_table[ot_idx], &sp_sprite_pool[0].p4_sprite);
+  ot_idx++;
 
   DrawSync (0);
   VSync (0);

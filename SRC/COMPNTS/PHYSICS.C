@@ -113,7 +113,7 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
 void
 pc_init_physics_compnt_pool (void)
 {
-  memset (&pc_physics_pool, 0,
+  memset (pc_physics_pool, 0,
           sizeof (PhysicsCompnt_t) * PHYSICS_MAX_NUM_PHYSICS_COMP);
 }
 

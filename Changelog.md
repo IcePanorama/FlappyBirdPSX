@@ -1,6 +1,9 @@
 # Changelog
 
-## 2024-09-?? to 2024-10-??
+## 2024-09-?? to 2024-11-??
++ Reworked screen drawing to place player on top.
++ Created pipe manager.
++ Implemented `fb_time.h`, timers.
 + Implemented a tiny messaging system to allow components and entities to talk to one another.
 + Finally got movement feeling pretty close to the original.
 + Started reimplementing everything lol

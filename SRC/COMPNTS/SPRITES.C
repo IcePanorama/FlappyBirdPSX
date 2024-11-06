@@ -74,6 +74,6 @@ get_sprite_with_id (int8_t i8_id)
 void
 sc_init_sprite_compnt_pool (void)
 {
-  memset (&sp_sprite_pool, 0,
+  memset (sp_sprite_pool, 0,
           sizeof (SpriteCompnt_t) * SPRITES_MAX_NUM_SPRITES);
 }

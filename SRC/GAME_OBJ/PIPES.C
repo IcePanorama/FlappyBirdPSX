@@ -5,6 +5,8 @@
 #include "sys/fb_defs.h"
 #include "utils.h"
 
+#include <rand.h>
+
 #ifdef DEBUG_BUILD
 #include <assert.h>
 #include <stdio.h>
@@ -15,6 +17,7 @@
 #define HALF_PIPE_WIDTH (17)
 #define MOVE_SPEED (30)
 #define HALF_GAP_SIZE (40)
+#define GAP_PLUS_FIVE (85)
 #define OFF_SCREEN (\
   ((-HALF_SCREEN_WIDTH) - (HALF_PIPE_WIDTH)) \
   << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
@@ -34,6 +37,12 @@ pie_create_pipes_entity (void)
 
   /* u8_eid + 0 = top pipe, eid_id + 1 = bot pipe */
   pe.u8_eid = EID_PIPES_ID + (u8_num_pipes_created << 1);
+
+  //  pe.v2_origin.x = ((HALF_SCREEN_WIDTH) + (HALF_PIPE_WIDTH));
+  //  pe.v2_origin.x <<= (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+  //  pe.v2_origin.y = rand() % ((SCREEN_HEIGHT) - 2 * (GAP_PLUS_FIVE)) + (GAP_PLUS_FIVE);
+  pe.v2_origin.y = rand() % 161 - 80;
+  //  pe.v2_origin.y <<= (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   init_pipes_physics_compnts (&pe, v2_pos, u16_heights);
   init_pipes_sprite_compnts (&pe, u16_heights);
@@ -72,6 +81,13 @@ init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
        assert(pe->ppc_physics_compnts[i] != 0)
 #endif /* DEBUG_BUILD */
 
+    /*
+    pe->ppc_physics_compnts[i]->v2_position.x = pe->v2_origin.x;
+    pe->ppc_physics_compnts[i]->v2_position.x <<=
+      (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+    v2_out_pos[i].x = pe->ppc_physics_compnts[i]->v2_position.x;
+    */
+
     pe->ppc_physics_compnts[i]->v2_position.x =
       ((HALF_SCREEN_WIDTH) + (HALF_PIPE_WIDTH));
     pe->ppc_physics_compnts[i]->v2_position.x <<=
@@ -84,22 +100,42 @@ init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
     pe->ppc_physics_compnts[i]->b_use_gravity = FALSE;
   }
 
+  /*
   u16_heights[0] = (HALF_SCREEN_HEIGHT) - (HALF_GAP_SIZE);
   u16_heights[1] = (SCREEN_HEIGHT) - ((HALF_SCREEN_HEIGHT) + (HALF_GAP_SIZE));
+*/
 
-  /* Calculate top pipe's y pos. */
+  u16_heights[0] = (HALF_SCREEN_HEIGHT) + pe->v2_origin.y - (HALF_GAP_SIZE);
+  u16_heights[1] = (SCREEN_HEIGHT) - ((HALF_SCREEN_HEIGHT) + pe->v2_origin.y + (HALF_GAP_SIZE));
+  printf("Org: %d, h[0]: %d, h[1]: %d\n", pe->v2_origin.y, u16_heights[0], u16_heights[1]);
+
+  /* Calculate top pipe's y pos. /
+  pe->ppc_physics_compnts[0]->v2_position.y =
+    -(u16_heights[0] >> 1);
+  pe->ppc_physics_compnts[0]->v2_position.y <<=
+    (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+/
+*/
   pe->ppc_physics_compnts[0]->v2_position.y =
     -(HALF_GAP_SIZE) - (u16_heights[0] >> 1);
   pe->ppc_physics_compnts[0]->v2_position.y <<=
     (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+
   v2_out_pos[0].y = pe->ppc_physics_compnts[0]->v2_position.y;
   pe->ppc_physics_compnts[0] = 0;
 
   /* Calculate bot pipe's y pos. */
+  /*
+  pe->ppc_physics_compnts[1]->v2_position.y =
+    (SCREEN_HEIGHT) - (u16_heights[1] >> 1);
+  pe->ppc_physics_compnts[1]->v2_position.y <<=
+    (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+*/
   pe->ppc_physics_compnts[1]->v2_position.y =
     (HALF_GAP_SIZE) + (u16_heights[1] >> 1);
   pe->ppc_physics_compnts[1]->v2_position.y <<=
     (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+
   v2_out_pos[1].y = pe->ppc_physics_compnts[1]->v2_position.y;
   pe->ppc_physics_compnts[1] = 0;
 }

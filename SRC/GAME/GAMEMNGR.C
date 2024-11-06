@@ -1,16 +1,15 @@
 #include "game/gamemngr.h"
 #include "compnts/physics.h"
 #include "compnts/sprites.h"
-#include "game/signals.h"
+#include "game/pipemngr.h"
+#include "game_obj/pipes.h"
 #include "game_obj/player.h"
 #include "input/cmdlist.h"
 #include "input/controlr.h"
-
-/* for testing */
 #include "sys/fb_defs.h"
 
-#include <stdio.h>
-/***************/
+// tmp (maybe)
+#include "game/signals.h"
 
 #define MAX_NUM_ENTITIES (32)
 
@@ -26,6 +25,9 @@ init_game (void)
   init_compnt_pools ();
   ctrl_init_controllers ();
   player = create_player_entity ();
+
+  pm_init_pipe_manager ();
+  pm_spawn_pipe_entity ();
 }
 
 void
@@ -45,6 +47,9 @@ update_game (void)
     player.ppc_physics_compnt->v2_velocity.y = 256;
     player.ppc_physics_compnt = 0;
   }
+
+  pm_manage_pipes ();
+
   update_physics_compnts (v2_entity_pos);
   update_sprites (v2_entity_pos);
 }
