@@ -1,18 +1,18 @@
 #include "game/signals.h"
 
 #ifdef DEBUG_BUILD
-#include <assert.h>
-#include <stdio.h>
+  #include <assert.h>
+  #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_SIG_INBOXES (255)
 
-Signal_t sig_inboxes[(MAX_NUM_SIG_INBOXES)] = {SIG_NO_SIGNALS};
+Signal_t sig_inboxes[(MAX_NUM_SIG_INBOXES)];
 
 void
 si_init_signal_inboxes (void)
 {
-  memset (&sig_inboxes, SIG_NO_SIGNALS,
+  memset (sig_inboxes, SIG_NO_SIGNALS,
           sizeof (Signal_t) * (MAX_NUM_SIG_INBOXES));
 }
 

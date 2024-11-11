@@ -1,11 +1,12 @@
 #include "game/pipemngr.h"
 #include "game/signals.h"
 #include "game_obj/pipes.h"
+#include "sys/fb_bools.h"
 #include "sys/fb_time.h"
 
 #ifdef DEBUG_BUILD
-#include <assert.h>
-#include <stdio.h>
+  #include <assert.h>
+  #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_PIPES (10)
@@ -20,7 +21,11 @@ static uint8_t u8_num_pipes = 0;
 void
 pm_init_pipe_manager (void)
 {
-  assert(SetRCnt (RCntCNT2, 0xFFFF, RCntMdNOINTR | RCntMdFR) == 1);
+  if (SetRCnt (RCntCNT2, 0xFFFF, RCntMdNOINTR | RCntMdFR) != 1)
+  {
+    printf ("ERROR: failed to init RCntCNT2 for PipeMngr.\n");
+    assert(FALSE);
+  }
 
   memset (pp_pipes, 0, sizeof (PipesEntity_t) * MAX_NUM_PIPES);
 }
@@ -28,7 +33,10 @@ pm_init_pipe_manager (void)
 void
 pm_manage_pipes (void)
 {
-  // FIXME: should `GetRCnt` be called after `manage_pipe_entities`?
+  /*
+   *  FIXME: should `GetRCnt` be called after `manage_pipe_entities`?
+   *  probably doesn't matter, but its worth considering!
+   */
   uint16_t u16_curr_time = (GetRCnt (RCntCNT2) & 0xFFFF);
   static uint32_t u32_counter = 0;
   static uint16_t u16_last_time = 0;
@@ -42,7 +50,12 @@ pm_manage_pipes (void)
   if (u32_counter <= 10)
     return;
 
-  pm_spawn_pipe_entity ();
+  if ((u8_num_pipes + 1) < MAX_NUM_PIPES)
+    pm_spawn_pipe_entity ();
+#ifdef DEBUG_BUILD
+  else printf("(u8_num_pipes + 1) < MAX_NUM_PIPES\n");
+#endif /* DEBUG_BUILD */
+
   u32_counter = 0;
 }
 
@@ -50,7 +63,7 @@ void
 pm_spawn_pipe_entity ()
 {
 #ifdef DEBUG_BUILD
-  assert((u8_num_pipes + 1) < MAX_NUM_PIPES);
+//  assert((u8_num_pipes + 1) < MAX_NUM_PIPES);
 #endif /* DEBUG_BUILD */
 
   pp_pipes[u8_num_pipes] = pie_create_pipes_entity ();
@@ -95,7 +108,7 @@ manage_pipe_entities ()
   }
 
   for (i = 0; i < u8_num_destroyed; i++)
-    destroy_pipe_entity (u8_pe_to_destroy[i]);
+      destroy_pipe_entity (u8_pe_to_destroy[i]);
 }
 
 #undef MAX_NUM_PIPES

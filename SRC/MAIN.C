@@ -2,7 +2,6 @@
 #include "sys/fb_bools.h"
 #include "video.h"
 
-// TODO: finish randomized spawn height for pipes.
 int
 main (void)
 {

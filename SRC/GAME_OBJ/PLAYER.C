@@ -6,8 +6,8 @@
 #include "utils.h"
 
 #ifdef DEBUG_BUILD
-#include <stdio.h>
-#include <assert.h>
+  #include <stdio.h>
+  #include <assert.h>
 #endif /* DEBUG_BUILD */
 
 #define PLAYER_JUMP_VELOCITY (256)
@@ -104,9 +104,9 @@ update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
   u16_bot_y   = v2_cs_pos.y + u8_half_height;
 
   setXY4(&sc->p4_sprite,
-         u16_left_x, u16_top_y,
+          u16_left_x, u16_top_y,
          u16_right_x, u16_top_y,
-         u16_left_x, u16_bot_y,
+          u16_left_x, u16_bot_y,
          u16_right_x, u16_bot_y);
 }
 
@@ -122,7 +122,7 @@ make_player_jump (void *e)
 {
   PlayerEntity_t *pe = (PlayerEntity_t *)e;
   if (pe == 0)
-    return;
+     return;
 
   pe->ppc_physics_compnt = get_physics_compnt_with_id(pe->eid_id);
   if (pe->ppc_physics_compnt == 0)
