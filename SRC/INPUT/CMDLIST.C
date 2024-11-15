@@ -5,7 +5,7 @@
 #include <libetc.h>
 
 /* COMMANDS */
-Command_t jump_command = { PADRdown, &make_player_jump };
+Command_t jump_command = { PADRdown, &pe_make_player_jump };
 /************/
 
 /* COMMAND LISTS */

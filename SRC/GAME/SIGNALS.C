@@ -1,8 +1,8 @@
 #include "game/signals.h"
 
 #ifdef DEBUG_BUILD
-  #include <assert.h>
-  #include <stdio.h>
+#include <assert.h>
+#include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_SIG_INBOXES (255)

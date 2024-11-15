@@ -5,8 +5,8 @@
 #include "sys/fb_time.h"
 
 #ifdef DEBUG_BUILD
-  #include <assert.h>
-  #include <stdio.h>
+#include <assert.h>
+#include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_PIPES (10)
@@ -63,7 +63,7 @@ void
 pm_spawn_pipe_entity ()
 {
 #ifdef DEBUG_BUILD
-//  assert((u8_num_pipes + 1) < MAX_NUM_PIPES);
+  //  assert((u8_num_pipes + 1) < MAX_NUM_PIPES);
 #endif /* DEBUG_BUILD */
 
   pp_pipes[u8_num_pipes] = pie_create_pipes_entity ();
@@ -108,7 +108,7 @@ manage_pipe_entities ()
   }
 
   for (i = 0; i < u8_num_destroyed; i++)
-      destroy_pipe_entity (u8_pe_to_destroy[i]);
+    destroy_pipe_entity (u8_pe_to_destroy[i]);
 }
 
 #undef MAX_NUM_PIPES

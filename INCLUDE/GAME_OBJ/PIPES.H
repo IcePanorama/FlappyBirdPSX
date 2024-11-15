@@ -1,3 +1,7 @@
+/**
+ *  pipes.h - Pipe entities and their related functions.
+ *  Abbreviated as PIE for (PI)pe (E)ntity.
+ */
 #ifndef _PIPES_ENTITY_H_
 #define _PIPES_ENTITY_H_
 
@@ -5,15 +9,15 @@
 #include "sys/fb_ints.h"
 #include "sys/fb_vecs.h"
 
+#define PIE_PIPE_WIDTH (34)
+#define PIE_HALF_PIPE_WIDTH (PIE_PIPE_WIDTH >> 1)
+
 typedef struct PipesEntity_s
 {
-  /*
-   *  Can't really use the EntityID_t type while hashing, need to rework how
-   *  this is used.
-   */
   uint8_t u8_eid;
   // In camera-space, mark this somehow.
   Vec2_t v2_origin;
+  struct ColShapeCompnt_s *pcsc_col_shape_compnts[2];
   struct PhysicsCompnt_s *ppc_physics_compnts[2];
   struct SpriteCompnt_s *psc_sprite_compnts[2];
 } PipesEntity_t;

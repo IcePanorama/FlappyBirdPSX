@@ -1,4 +1,5 @@
 #include "game_obj/pipes.h"
+#include "compnts/colshape.h"
 #include "compnts/physics.h"
 #include "compnts/sprites.h"
 #include "game_obj/entityid.h"
@@ -8,18 +9,16 @@
 #include <rand.h>
 
 #ifdef DEBUG_BUILD
-  #include <assert.h>
-  #include <stdio.h>
+#include <assert.h>
+#include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_PIPES_VALUE (255)
-#define PIPE_WIDTH (34)
-#define HALF_PIPE_WIDTH (17)
 #define MOVE_SPEED (30)
 #define HALF_GAP_SIZE (40)
 #define GAP_PLUS_FIVE (85)
 #define OFF_SCREEN (\
-  ((-HALF_SCREEN_WIDTH) - (HALF_PIPE_WIDTH)) \
+  ((-HALF_SCREEN_WIDTH) - (PIE_HALF_PIPE_WIDTH)) \
   << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
 
 static void init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
@@ -42,7 +41,6 @@ pie_create_pipes_entity (void)
   pe.v2_origin.y = rand() % 101 - 50;
 
   init_pipes_physics_compnts (&pe, v2_pos, u16_heights);
-  init_pipes_sprite_compnts (&pe, u16_heights);
 
   /*
    *  FIXME: we absolutely must ensure that our `SpriteComponent_t` ptr isn't
@@ -54,10 +52,20 @@ pie_create_pipes_entity (void)
    *  once somewhere in the update loop, after all of the other updates have
    *  finished.
    */
+  init_pipes_sprite_compnts (&pe, u16_heights);
   for (i = 0; i < 2; i++)
   {
     if (pe.psc_sprite_compnts[i] != 0)
       pie_update_pipes_sprite_xy (pe.psc_sprite_compnts[i], &v2_pos[i]);
+  }
+
+
+  for (i = 0; i < 2; i++)
+  {
+    csc_create_new_col_shape (pe.u8_eid + i, PIE_PIPE_WIDTH, u16_heights[i]);
+    pe.pcsc_col_shape_compnts[i] = get_col_shape_with_id (pe.u8_eid + i);
+    if (pe.pcsc_col_shape_compnts[i] != 0)
+      csc_update_col_shape (pe.pcsc_col_shape_compnts[i], &v2_pos[i]);
   }
 
   u8_num_pipes_created = (u8_num_pipes_created + 1) % MAX_NUM_PIPES_VALUE;
@@ -76,12 +84,12 @@ init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
 
 #ifdef DEBUG_BUILD
     //FIXME: handle recieving null component gracefully in release builds.
-    assert(pe->ppc_physics_compnts[i] != 0)
+       assert(pe->ppc_physics_compnts[i] != 0)
 #endif /* DEBUG_BUILD */
 
     // Default starting x pos is offscreen, on the right
     pe->ppc_physics_compnts[i]->v2_position.x =
-      ((HALF_SCREEN_WIDTH) + (HALF_PIPE_WIDTH));
+      ((HALF_SCREEN_WIDTH) + (PIE_HALF_PIPE_WIDTH));
     pe->ppc_physics_compnts[i]->v2_position.x <<=
       (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
@@ -128,7 +136,7 @@ init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2])
     assert(pe->psc_sprite_compnts[i] != 0);
 #endif /* DEBUG_BUILD */
 
-    pe->psc_sprite_compnts[i]->u8_width = (PIPE_WIDTH);
+    pe->psc_sprite_compnts[i]->u8_width = (PIE_PIPE_WIDTH);
     pe->psc_sprite_compnts[i]->u8_height = u16_heights[i];
 
     SetPolyF4 (&pe->psc_sprite_compnts[i]->p4_sprite);
@@ -145,6 +153,7 @@ pie_destroy_pipes_entity (PipesEntity_t *pe)
   uint8_t i;
   for (i = 0; i < 2; i++)
   {
+    csc_destroy_col_shape (pe->u8_eid + i);
     destroy_sprite (pe->u8_eid + i);
     destroy_physics_compnt (pe->u8_eid + i);
   }
@@ -167,15 +176,15 @@ pie_update_pipes_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
 
   v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
 
-  u16_left_x  = v2_cs_pos.x - (HALF_PIPE_WIDTH);
-  u16_right_x = v2_cs_pos.x + (HALF_PIPE_WIDTH);
+  u16_left_x  = v2_cs_pos.x - (PIE_HALF_PIPE_WIDTH);
+  u16_right_x = v2_cs_pos.x + (PIE_HALF_PIPE_WIDTH);
   u16_top_y   = v2_cs_pos.y - u8_half_height;
   u16_bot_y   = v2_cs_pos.y + u8_half_height;
 
   setXY4(&sc->p4_sprite,
-          u16_left_x, u16_top_y,
+         u16_left_x, u16_top_y,
          u16_right_x, u16_top_y,
-          u16_left_x, u16_bot_y,
+         u16_left_x, u16_bot_y,
          u16_right_x, u16_bot_y);
 }
 
@@ -193,7 +202,5 @@ pie_should_be_destroyed (PipesEntity_t *pe)
 }
 
 #undef MAX_NUM_PIPES_VALUE
-#undef PIPE_WIDTH
-#undef HALF_PIPE_WIDTH
 #undef MOVE_SPEED
 #undef HALF_GAP_SIZE

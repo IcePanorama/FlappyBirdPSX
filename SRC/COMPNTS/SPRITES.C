@@ -1,8 +1,8 @@
 #include "compnts/sprites.h"
 
 #ifdef DEBUG_BUILD
-  #include <stdio.h>
-  #include <assert.h>
+#include <stdio.h>
+#include <assert.h>
 #endif /* DEBUG_BUILD */
 
 SpriteCompnt_t sp_sprite_pool[SPRITES_MAX_NUM_SPRITES];// = {{0}};

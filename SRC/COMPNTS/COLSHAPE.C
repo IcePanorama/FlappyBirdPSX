@@ -1,8 +1,10 @@
 #include "compnts/colshape.h"
+#include "compnts/wiframe.h"
+#include "utils.h"
 
 #ifdef DEBUG_BUILD
-  #include <stdio.h>
-  #include <assert.h>
+#include <stdio.h>
+#include <assert.h>
 #endif /* DEBUG_BUILD */
 
 ColShapeCompnt_t csc_col_shape_pool[(COLSHP_MAX_NUM_COL_SHAPES)] = {{0}};
@@ -14,16 +16,22 @@ csc_init_col_shape_compnt_pool (void)
   memset (csc_col_shape_pool, 0,
           sizeof (ColShapeCompnt_t) * COLSHP_MAX_NUM_COL_SHAPES);
   u8_csc_num_col_shapes = 0;
+  wfc_init_wireframe_compnt_pool ();
 }
 
 void
-csc_create_new_col_shape (uint8_t u8_id)
+csc_create_new_col_shape (uint8_t u8_id, uint8_t u8_width, uint8_t u8_height)
 {
 #ifdef DEBUG_BUILD
   assert((u8_csc_num_col_shapes + 1) < COLSHP_MAX_NUM_COL_SHAPES);
 #endif /* DEBUG_BUILD */
 
   csc_col_shape_pool[u8_csc_num_col_shapes].u8_parent_id = u8_id;
+  csc_col_shape_pool[u8_csc_num_col_shapes].u8_width = u8_width;
+  csc_col_shape_pool[u8_csc_num_col_shapes].u8_height = u8_height;
+
+  wfc_create_new_wireframe (u8_id);
+
   u8_csc_num_col_shapes++;
 }
 
@@ -44,7 +52,7 @@ csc_destroy_col_shape (uint8_t u8_id)
   }
 
 #ifdef DEBUG_BUILD
-  assert(u8_idx >= COLSHP_MAX_NUM_COL_SHAPES);
+  assert(u8_idx != (uint8_t)(-1));
 #endif /* DEBUG_BUILD */
 
   /* if the given sprite is last active sprite, swapping isn't necessary. */
@@ -54,6 +62,8 @@ csc_destroy_col_shape (uint8_t u8_id)
     csc_col_shape_pool[u8_idx] = csc_col_shape_pool[u8_csc_num_col_shapes - 1];
     csc_col_shape_pool[u8_csc_num_col_shapes - 1] = csc_tmp;
   }
+
+  wfc_destroy_wireframe (u8_id);
 
   u8_csc_num_col_shapes--;
 }
@@ -77,4 +87,29 @@ get_col_shape_with_id (uint8_t u8_id)
 #endif /* DEBUG_BUILD */
 
   return 0;
+}
+
+void
+csc_update_col_shape (ColShapeCompnt_t *csc, Vec2_t *v2_pos)
+{
+  int16_t i16_left_x;
+  int16_t i16_right_x;
+  int16_t i16_top_y;
+  int16_t i16_bot_y;
+  Vec2_t v2_cs_pos;
+  uint16_t u16_half_width = csc->u8_width >> 1;
+  uint16_t u16_half_height = csc->u8_height >> 1;
+
+  csc->v2_pos = v2_pos;
+
+  v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
+
+  i16_left_x      = v2_cs_pos.x - u16_half_width;
+  i16_right_x     = v2_cs_pos.x + u16_half_width;
+  i16_top_y       = v2_cs_pos.y - u16_half_height;
+  i16_bot_y       = v2_cs_pos.y + u16_half_height;
+
+  csc->wfc = wfc_get_wireframe_with_id (csc->u8_parent_id);
+  update_wireframe_xy (csc->wfc, i16_left_x, i16_right_x, i16_top_y, i16_bot_y);
+  csc->wfc = 0; // set to NULL after use!
 }
