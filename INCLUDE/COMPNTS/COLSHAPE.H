@@ -23,6 +23,7 @@ void csc_init_col_shape_compnt_pool (void);
 void csc_create_new_col_shape (uint8_t u8_id, uint8_t u8_width,
                                uint8_t u8_height);
 void csc_destroy_col_shape (uint8_t u8_id);
+//FIXME: fix name.
 ColShapeCompnt_t *get_col_shape_with_id (uint8_t u8_id);
 void csc_update_col_shape (ColShapeCompnt_t *csc, Vec2_t *v2_pos);
 bool_t csc_detect_collision (ColShapeCompnt_t *a, ColShapeCompnt_t *b);

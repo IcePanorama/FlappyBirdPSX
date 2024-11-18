@@ -23,6 +23,8 @@ ctrl_handle_user_input (CommandList_t *cmdl, void *entity)
   Command_t *cmd;
   int32_t i32_padd;
 
+  if (cmdl == 0) return;
+
   //TODO: expand to support two players.
   if (uc_controller_1[0] != 0)
   {

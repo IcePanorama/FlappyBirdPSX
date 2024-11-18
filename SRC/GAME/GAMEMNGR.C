@@ -28,6 +28,7 @@ static void update_col_shapes (Vec2_t *v2_input_pos);
 static void init_compnt_pools (void);
 static void detect_collisions (void);
 static bool_t x_pos_in_red_zone (int16_t x);
+static void normal_update (void);
 
 //TODO: detect collisions
 
@@ -42,30 +43,24 @@ init_game (void)
   pm_spawn_pipe_entity ();
 }
 
+// TODO: seed rng at game start; track player score; reset game on player death
 void
 update_game (void)
 {
-  static Vec2_t v2_entity_pos[MAX_NUM_ENTITIES] = {{0}};
-
   ctrl_handle_user_input (cmdl_command_lists[gs_curr_game_state],
                           (void *)&player);
 
-  if (si_check_inbox (player.u8_eid) == SIG_BELOW_SCREEN)
+  switch (gs_curr_game_state)
   {
-    player.ppc_physics_compnt = get_physics_compnt_with_id(player.u8_eid);
-    player.ppc_physics_compnt->v2_position.y =
-      ((-(HALF_SCREEN_HEIGHT) - player.u8_height)
-      << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
-    player.ppc_physics_compnt->v2_velocity.y = 256;
-    player.ppc_physics_compnt = 0;
+    case GSTATE_GAME_START:
+      return;
+    case GSTATE_NORMAL:
+      normal_update ();
+    case GSTATE_GAME_PAUSED:
+    case GSTATE_GAME_OVER:
+    default:
+      return;
   }
-
-  pm_manage_pipes ();
-
-  update_physics_compnts (v2_entity_pos);
-  update_sprites (v2_entity_pos);
-  update_col_shapes (v2_entity_pos);
-  detect_collisions ();
 }
 
 void
@@ -123,25 +118,16 @@ void
 detect_collisions (void)
 {
   uint8_t i;
-  int16_t i16_red_zone_y;
   ColShapeCompnt_t *csc_pipe;
-  //  uint16_t u16_height;
 
   for (i = 1; i < u8_pc_num_physics; i++)
   {
     if (x_pos_in_red_zone (pc_physics_pool[i].v2_position.x))
     {
       csc_pipe = get_col_shape_with_id(pc_physics_pool[i].i8_parent_id);
+      player.pcsc_col_shape = get_col_shape_with_id (player.u8_eid);
 
-      i16_red_zone_y = csc_pipe->v2_pos->y + (csc_pipe->u8_height >> 1);
-
-      // Player should be first physics component
-      assert(pc_physics_pool[0].i8_parent_id == EID_PLAYER_ID);
-      printf("y: %d\tpy: %d\n", i16_red_zone_y, pc_physics_pool[0].v2_position.y);
-
-      if (pc_physics_pool[i].i8_parent_id % 2 == 1) // top pipe
-      { assert(i16_red_zone_y < pc_physics_pool[0].v2_position.y); }
-      else { assert(pc_physics_pool[0].v2_position.y < i16_red_zone_y); }
+      assert(!csc_detect_collision (player.pcsc_col_shape, csc_pipe));
     }
   }
 }
@@ -152,6 +138,29 @@ x_pos_in_red_zone (int16_t x)
   const int16_t i16_RED_ZONE_X = ((player.u8_width >> 1) + (PIE_HALF_PIPE_WIDTH)) << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   return -i16_RED_ZONE_X < x && x < i16_RED_ZONE_X;
+}
+
+void
+normal_update (void)
+{
+  static Vec2_t v2_entity_pos[MAX_NUM_ENTITIES] = {{0}};
+
+  if (si_check_inbox (player.u8_eid) == SIG_BELOW_SCREEN)
+  {
+    player.ppc_physics_compnt = get_physics_compnt_with_id(player.u8_eid);
+    player.ppc_physics_compnt->v2_position.y =
+      ((-(HALF_SCREEN_HEIGHT) - player.u8_height)
+      << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
+    player.ppc_physics_compnt->v2_velocity.y = 256;
+    player.ppc_physics_compnt = 0;
+  }
+
+  pm_manage_pipes ();
+
+  detect_collisions ();
+  update_physics_compnts (v2_entity_pos);
+  update_sprites (v2_entity_pos);
+  update_col_shapes (v2_entity_pos);
 }
 
 #undef MAX_NUM_ENTITIES

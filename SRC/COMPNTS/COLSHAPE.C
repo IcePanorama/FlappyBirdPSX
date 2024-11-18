@@ -1,5 +1,6 @@
 #include "compnts/colshape.h"
 #include "compnts/wiframe.h"
+#include "sys/fb_defs.h"
 #include "utils.h"
 
 #ifdef DEBUG_BUILD
@@ -82,7 +83,7 @@ get_col_shape_with_id (uint8_t u8_id)
   }
 
 #ifdef DEBUG_BUILD
-  printf ("Sprite with id, %d, not found!\n", u8_id);
+  printf ("Collision shape with id, %d, not found!\n", u8_id);
   assert(0);
 #endif /* DEBUG_BUILD */
 
@@ -112,4 +113,48 @@ csc_update_col_shape (ColShapeCompnt_t *csc, Vec2_t *v2_pos)
   csc->wfc = wfc_get_wireframe_with_id (csc->u8_parent_id);
   update_wireframe_xy (csc->wfc, i16_left_x, i16_right_x, i16_top_y, i16_bot_y);
   csc->wfc = 0; // set to NULL after use!
+}
+
+/*
+ *  FIXME: player appears 1 pixel away from pipe, yet collision is still
+ *  detected. This doesn't always happen; it must be a weird timing issue.
+ *  Probably won't really matter all that much in practice, but might be worth
+ *  tracking down nonetheless.
+ */
+bool_t
+csc_detect_collision (ColShapeCompnt_t *a, ColShapeCompnt_t *b)
+{
+  Vec2_t v2_a_cs_pos;
+  Vec2_t v2_b_cs_pos;
+  int16_t i16_A_MIN_X;
+  int16_t i16_A_MAX_X;
+  int16_t i16_A_MIN_Y;
+  int16_t i16_A_MAX_Y;
+  int16_t i16_B_MIN_X;
+  int16_t i16_B_MAX_X;
+  int16_t i16_B_MIN_Y;
+  int16_t i16_B_MAX_Y;
+  const uint8_t u8_A_HALF_WIDTH = a->u8_width >> 1;
+  const uint8_t u8_A_HALF_HEIGHT = a->u8_height >> 1;
+  const uint8_t u8_B_HALF_WIDTH = b->u8_width >> 1;
+  const uint8_t u8_B_HALF_HEIGHT = b->u8_height >> 1;
+
+  v2_convert_world_space_to_camera_space (a->v2_pos, &v2_a_cs_pos);
+  v2_convert_world_space_to_camera_space (b->v2_pos, &v2_b_cs_pos);
+
+  i16_A_MIN_X = v2_a_cs_pos.x - u8_A_HALF_WIDTH;
+  i16_A_MAX_X = v2_a_cs_pos.x + u8_A_HALF_WIDTH;
+  i16_A_MIN_Y = v2_a_cs_pos.y - u8_A_HALF_HEIGHT;
+  i16_A_MAX_Y = v2_a_cs_pos.y + u8_A_HALF_HEIGHT;
+  i16_B_MIN_X = v2_b_cs_pos.x - u8_B_HALF_WIDTH;
+  i16_B_MAX_X = v2_b_cs_pos.x + u8_B_HALF_WIDTH;
+  i16_B_MIN_Y = v2_b_cs_pos.y - u8_B_HALF_HEIGHT;
+  i16_B_MAX_Y = v2_b_cs_pos.y + u8_B_HALF_HEIGHT;
+
+  return (
+  i16_A_MIN_X <= i16_B_MAX_X &&
+  i16_A_MAX_X >= i16_B_MIN_X &&
+  i16_A_MIN_Y <= i16_B_MAX_Y &&
+  i16_A_MAX_Y >= i16_B_MIN_Y
+);
 }
