@@ -22,7 +22,6 @@ all: obj_files
 obj_files:
   echo "Building object files..."
   $(CC) $(CFLAGS) -c -oMAIN.OBJ $(SRC_DIR)\MAIN.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oVIDEO.OBJ $(SRC_DIR)\VIDEO.C -I $(INCL_DIR)
   $(CC) $(CFLAGS) -c -oUTILS.OBJ $(SRC_DIR)\UTILS.C -I $(INCL_DIR)
   $(CC) $(CFLAGS) -c -oCOLSHAPE.OBJ $(SRC_DIR)\COMPNTS\COLSHAPE.C -I $(INCL_DIR)
   $(CC) $(CFLAGS) -c -oSPRITES.OBJ $(SRC_DIR)\COMPNTS\SPRITES.C -I $(INCL_DIR)
@@ -36,6 +35,8 @@ obj_files:
   $(CC) $(CFLAGS) -c -oPIPES.OBJ $(SRC_DIR)\GAME_OBJ\PIPES.C -I $(INCL_DIR)
   $(CC) $(CFLAGS) -c -oCMDLIST.OBJ $(SRC_DIR)\INPUT\CMDLIST.C -I $(INCL_DIR)
   $(CC) $(CFLAGS) -c -oCONTROLR.OBJ $(SRC_DIR)\INPUT\CONTROLR.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oSCRBUFF.OBJ $(SRC_DIR)\VIDEO\SCRBUFF.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oVIDEO.OBJ $(SRC_DIR)\VIDEO\VIDEO.C -I $(INCL_DIR)
 
 clean:
 	del *.cpe

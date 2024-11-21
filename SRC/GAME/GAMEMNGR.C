@@ -4,16 +4,12 @@
 #include "compnts/physics.h"
 #include "compnts/sprites.h"
 #include "game/pipemngr.h"
+#include "game/signals.h"
 #include "game_obj/pipes.h"
 #include "game_obj/player.h"
 #include "input/cmdlist.h"
 #include "input/controlr.h"
 #include "sys/fb_defs.h"
-
-// tmp (maybe)
-#include "game/signals.h"
-#include "game_obj/entityid.h"
-#include "sys/fb_time.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -30,32 +26,39 @@ static void detect_collisions (void);
 static bool_t x_pos_in_red_zone (int16_t x);
 static void normal_update (void);
 
-//TODO: detect collisions
-
 void
-init_game (void)
+gm_init_game (void)
 {
   init_compnt_pools ();
-  ctrl_init_controllers ();
   player = pe_create_player_entity ();
 
   pm_init_pipe_manager ();
-  pm_spawn_pipe_entity ();
+  /*
+   *  FIXME: this pipe always has its gap in the same exact place since we're
+   *  spawning it before rand is seeded. This shouldn't be a problem in the
+   *  final game as we'll likely seed rand at the main menu!
+   */
+  //  pm_spawn_pipe_entity ();
 }
 
-// TODO: seed rng at game start; track player score; reset game on player death
+// TODO: track player score, start work on visuals
 void
-update_game (void)
+gm_update_game (void)
 {
   ctrl_handle_user_input (cmdl_command_lists[gs_curr_game_state],
                           (void *)&player);
 
+  if (gs_curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
+  {
+    printf("Game over!\n");
+    gs_curr_game_state = GSTATE_GAME_OVER;
+  }
+
   switch (gs_curr_game_state)
   {
-    case GSTATE_GAME_START:
-      return;
     case GSTATE_NORMAL:
       normal_update ();
+    case GSTATE_GAME_START:
     case GSTATE_GAME_PAUSED:
     case GSTATE_GAME_OVER:
     default:
@@ -64,7 +67,7 @@ update_game (void)
 }
 
 void
-destroy_game (void)
+gm_destroy_game (void)
 {
   pe_destroy_player_entity (&player);
 }
@@ -112,8 +115,6 @@ init_compnt_pools (void)
   wfc_init_wireframe_compnt_pool ();
 }
 
-// Most basic form of collision detection is working!
-// TODO: Clean up/finish later.
 void
 detect_collisions (void)
 {
@@ -127,7 +128,11 @@ detect_collisions (void)
       csc_pipe = get_col_shape_with_id(pc_physics_pool[i].i8_parent_id);
       player.pcsc_col_shape = get_col_shape_with_id (player.u8_eid);
 
-      assert(!csc_detect_collision (player.pcsc_col_shape, csc_pipe));
+      // FIXME: Should this send a signal instead?
+      if (csc_detect_collision (player.pcsc_col_shape, csc_pipe))
+      {
+        pe_kill_player (&player);
+      }
     }
   }
 }
@@ -135,7 +140,9 @@ detect_collisions (void)
 bool_t
 x_pos_in_red_zone (int16_t x)
 {
-  const int16_t i16_RED_ZONE_X = ((player.u8_width >> 1) + (PIE_HALF_PIPE_WIDTH)) << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+  const int16_t i16_RED_ZONE_X =
+    ((player.u8_width >> 1) + (PIE_HALF_PIPE_WIDTH))
+    << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   return -i16_RED_ZONE_X < x && x < i16_RED_ZONE_X;
 }
@@ -145,17 +152,8 @@ normal_update (void)
 {
   static Vec2_t v2_entity_pos[MAX_NUM_ENTITIES] = {{0}};
 
-  if (si_check_inbox (player.u8_eid) == SIG_BELOW_SCREEN)
-  {
-    player.ppc_physics_compnt = get_physics_compnt_with_id(player.u8_eid);
-    player.ppc_physics_compnt->v2_position.y =
-      ((-(HALF_SCREEN_HEIGHT) - player.u8_height)
-      << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
-    player.ppc_physics_compnt->v2_velocity.y = 256;
-    player.ppc_physics_compnt = 0;
-  }
-
   pm_manage_pipes ();
+  pe_update_player (&player);
 
   detect_collisions ();
   update_physics_compnts (v2_entity_pos);
@@ -163,4 +161,10 @@ normal_update (void)
   update_col_shapes (v2_entity_pos);
 }
 
-#undef MAX_NUM_ENTITIES
+void
+gm_restart_game (void)
+{
+  gm_destroy_game ();
+  gm_init_game ();
+  gs_curr_game_state = GSTATE_GAME_START;
+}

@@ -200,7 +200,3 @@ pie_should_be_destroyed (PipesEntity_t *pe)
 
   return pe->ppc_physics_compnts[0]->v2_position.x <= (OFF_SCREEN);
 }
-
-#undef MAX_NUM_PIPES_VALUE
-#undef MOVE_SPEED
-#undef HALF_GAP_SIZE

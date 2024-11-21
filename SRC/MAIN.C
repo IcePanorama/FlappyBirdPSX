@@ -1,20 +1,22 @@
 #include "game/gamemngr.h"
+#include "input/controlr.h"
 #include "sys/fb_bools.h"
-#include "video.h"
+#include "video/video.h"
 
 int
 main (void)
 {
-  init_video_subsystem ();
-  init_game ();
+  v_init_video ();
+  ctrl_init_controllers ();
+  gm_init_game ();
 
   while (TRUE)
   {
-    update_game ();
-    render_screen ();
+    gm_update_game ();
+    v_render_screen ();
   }
 
-  destroy_game ();
+  gm_destroy_game ();
 
   return 0;
 }

@@ -1,4 +1,4 @@
-/* Don't touch! CC seems really particular about the order of these. */
+/* Do not touch! CC seems really particular about the order of these. */
 #include <sys/types.h>
 #include <libgte.h>
 #include <libgpu.h>
@@ -10,7 +10,8 @@
 #include "compnts/wiframe.h"
 #include "sys/fb_ints.h"
 #include "sys/fb_defs.h"
-#include "video.h"
+#include "video/scrbuff.h"
+#include "video/video.h"
 
 #ifdef DEBUG_BUILD
 #include <assert.h>
@@ -18,24 +19,12 @@
 #endif /* DEBUG_BUILD */
 
 #define DIST_TO_SCREEN (512)
-#define OT_MAX_LEN (4096)
 
-typedef struct ScreenBuffer_s
-{
-  DRAWENV draw_env;
-  DISPENV disp_env;
-  u_long ordering_table[OT_MAX_LEN];
-} ScreenBuffer_t;
-
-void draw_sprites (u_long *ot, u_long *ot_idx);
-void draw_wireframes (u_long *ot, u_long *ot_idx);
-
-static ScreenBuffer_t screen_buffer[2];
-
-static void init_screen_buffers (ScreenBuffer_t *sb);
+static void draw_sprites (u_long *ot, u_long *ot_idx);
+static void draw_wireframes (u_long *ot, u_long *ot_idx);
 
 void
-init_video_subsystem (void)
+v_init_video (void)
 {
   //TODO: figure out how to handle NTSC/PAL differences elegantly
   SetVideoMode (0);
@@ -49,34 +38,17 @@ init_video_subsystem (void)
   SetGeomOffset (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
   SetGeomScreen (DIST_TO_SCREEN);
 
-  init_screen_buffers (screen_buffer);
+  sb_init_screen_buffers ();
 
   SetDispMask (1);
 }
 
 void
-init_screen_buffers (ScreenBuffer_t *sb)
-{
-  //TODO: I may be able to afford 480i, given how simple FB is.
-  SetDefDrawEnv (&sb[0].draw_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-  SetDefDrawEnv (&sb[1].draw_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
-		 SCREEN_HEIGHT);
-  SetDefDispEnv (&sb[0].disp_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
-		 SCREEN_HEIGHT);
-  SetDefDispEnv (&sb[1].disp_env, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-  sb[0].draw_env.isbg = sb[1].draw_env.isbg = 1;
-  setRGB0(&sb[0].draw_env, 100, 100, 100);
-  setRGB0(&sb[1].draw_env, 100, 100, 100);
-}
-
-//FIXME: needs refactoring!
-void
-render_screen (void)
+v_render_screen (void)
 {
   u_long ot_idx = 0;
-  static ScreenBuffer_t *curr_sb = screen_buffer;
-  curr_sb = (curr_sb == screen_buffer) ? screen_buffer + 1 : screen_buffer;
+  static ScreenBuffer_t *curr_sb = screen_buffers;
+  curr_sb = (curr_sb == screen_buffers) ? screen_buffers + 1 : screen_buffers;
 
   ClearOTag (curr_sb->ordering_table, OT_MAX_LEN);
 

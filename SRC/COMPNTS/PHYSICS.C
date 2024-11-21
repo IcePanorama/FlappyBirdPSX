@@ -115,6 +115,7 @@ pc_init_physics_compnt_pool (void)
 {
   memset (pc_physics_pool, 0,
           sizeof (PhysicsCompnt_t) * PHYSICS_MAX_NUM_PHYSICS_COMP);
+  u8_pc_num_physics = 0;
 }
 
 void

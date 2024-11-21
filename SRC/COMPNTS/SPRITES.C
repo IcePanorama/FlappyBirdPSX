@@ -76,4 +76,5 @@ sc_init_sprite_compnt_pool (void)
 {
   memset (sp_sprite_pool, 0,
           sizeof (SpriteCompnt_t) * SPRITES_MAX_NUM_SPRITES);
+  sp_num_sprites = 0;
 }

@@ -2,6 +2,7 @@
 #include "compnts/colshape.h"
 #include "compnts/physics.h"
 #include "compnts/sprites.h"
+#include "game/signals.h"
 #include "game_obj/entityid.h"
 #include "sys/fb_defs.h"
 #include "utils.h"
@@ -14,6 +15,11 @@
 #define PLAYER_SIZE (16)
 #define PLAYER_JUMP_VELOCITY (256)
 
+/* Player Flags */
+#define FL_ALIVE     (0)
+#define FL_DESTROYED (1)
+/****************/
+
 static void init_player_physics_compnt (PlayerEntity_t *pe,
                                         Vec2_t *v2_output_pos);
 static void init_player_sprite_compnt (PlayerEntity_t *pe);
@@ -25,6 +31,8 @@ pe_create_player_entity (void)
   Vec2_t v2_pos;
 
   pe.u8_eid = EID_PLAYER_ID;
+  pe.u8_flags = 0;  // probably unnecessary, but just to be safe.
+  pe.u8_flags |= (1 << (FL_ALIVE));
   pe.u8_width = pe.u8_height = (PLAYER_SIZE);
 
 
@@ -121,9 +129,13 @@ pe_update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
 void
 pe_destroy_player_entity (PlayerEntity_t *pe)
 {
+  if (pe == 0 || (pe->u8_flags & (1 << (FL_DESTROYED)))) return;
+
   csc_destroy_col_shape (pe->u8_eid);
   destroy_sprite (pe->u8_eid);
   destroy_physics_compnt (pe->u8_eid);
+
+  pe->u8_flags |= (1 << (FL_DESTROYED));
 }
 
 void
@@ -141,5 +153,24 @@ pe_make_player_jump (void *e)
   pe->ppc_physics_compnt = 0;
 }
 
-#undef PLAYER_SIZE
-#undef PLAYER_JUMP_VELOCITY
+void
+pe_kill_player (PlayerEntity_t *pe)
+{
+  //TODO: play death animation/sound
+  pe->u8_flags &= ~(1 << (FL_ALIVE));
+}
+
+void
+pe_update_player (PlayerEntity_t *pe)
+{
+  if (si_check_inbox (pe->u8_eid) == SIG_BELOW_SCREEN)
+  {
+    pe_kill_player(pe);
+  }
+}
+
+bool_t
+pe_is_alive (PlayerEntity_t *pe)
+{
+  return (pe->u8_flags & (1 << (FL_ALIVE)));
+}
