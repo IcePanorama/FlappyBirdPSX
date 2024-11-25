@@ -68,6 +68,7 @@ pie_create_pipes_entity (void)
       csc_update_col_shape (pe.pcsc_col_shape_compnts[i], &v2_pos[i]);
   }
 
+  pe.b_was_scored = FALSE;
   u8_num_pipes_created = (u8_num_pipes_created + 1) % MAX_NUM_PIPES_VALUE;
   return pe;
 }

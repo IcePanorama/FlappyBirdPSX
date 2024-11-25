@@ -1,4 +1,5 @@
 #include "compnts/physics.h"
+#include "game/score.h"
 #include "game/signals.h"
 #include "sys/fb_defs.h"
 
@@ -33,7 +34,7 @@ create_new_physics_compnt (int8_t i8_id)
   assert((u8_pc_num_physics + 1) < PHYSICS_MAX_NUM_PHYSICS_COMP);
 #endif /* DEBUG_BUILD */
 
-  pc_physics_pool[u8_pc_num_physics].i8_parent_id = i8_id;
+  pc_physics_pool[u8_pc_num_physics].u8_parent_id = i8_id;
   u8_pc_num_physics++;
 }
 
@@ -46,7 +47,7 @@ destroy_physics_compnt (int8_t i8_id)
 
   for (i = 0; i < u8_pc_num_physics; i++)
   {
-    if (pc_physics_pool[i].i8_parent_id == i8_id)
+    if (pc_physics_pool[i].u8_parent_id == i8_id)
     {
       u8_idx = i;
       break;
@@ -75,7 +76,7 @@ get_physics_compnt_with_id (int8_t i8_id)
 
   for (i = 0; i < u8_pc_num_physics; i++)
   {
-    if (pc_physics_pool[i].i8_parent_id == i8_id)
+    if (pc_physics_pool[i].u8_parent_id == i8_id)
     {
       return &pc_physics_pool[i];
     }
@@ -104,6 +105,10 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
 
   pc->v2_position.x += pc->v2_velocity.x;
 
+  // Score observer code goes here.
+  if (s_in_green_area(pc->v2_position.x))
+    s_process_scoring (pc->u8_parent_id);
+
   v2_output_pos->x = pc->v2_position.x;
   v2_output_pos->y = pc->v2_position.y;
 
@@ -122,13 +127,13 @@ void
 manage_screen_position_signals (PhysicsCompnt_t *pc)
 {
   if (pc->v2_position.x < (OFF_SCREEN_LEFT))
-    si_send_signal(pc->i8_parent_id, SIG_OFF_SCREEN_LEFT);
+    si_send_signal(pc->u8_parent_id, SIG_OFF_SCREEN_LEFT);
   else if (pc->v2_position.x > OFF_SCREEN_RIGHT)
-    si_send_signal(pc->i8_parent_id, (SIG_OFF_SCREEN_RIGHT));
+    si_send_signal(pc->u8_parent_id, (SIG_OFF_SCREEN_RIGHT));
   else if (pc->v2_position.y > (BELOW_SCREEN_Y))
-    si_send_signal(pc->i8_parent_id, SIG_BELOW_SCREEN);
+    si_send_signal(pc->u8_parent_id, SIG_BELOW_SCREEN);
   else if (pc->v2_position.y < (ABOVE_SCREEN_Y))
-    si_send_signal(pc->i8_parent_id, SIG_ABOVE_SCREEN);
+    si_send_signal(pc->u8_parent_id, SIG_ABOVE_SCREEN);
 }
 
 #undef GRAVITY

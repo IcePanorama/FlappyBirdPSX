@@ -3,7 +3,9 @@
 #include "compnts/wiframe.h"
 #include "compnts/physics.h"
 #include "compnts/sprites.h"
+#include "game/colmngr.h"
 #include "game/pipemngr.h"
+#include "game/score.h"
 #include "game/signals.h"
 #include "game_obj/pipes.h"
 #include "game_obj/player.h"
@@ -11,8 +13,10 @@
 #include "input/controlr.h"
 #include "sys/fb_defs.h"
 
+#ifdef DEBUG_BUILD
 #include <stdio.h>
 #include <assert.h>
+#endif /* DEBUG_BUILD */
 
 #define MAX_NUM_ENTITIES (32)
 
@@ -22,15 +26,19 @@ static void update_physics_compnts (Vec2_t *v2_output_pos);
 static void update_sprites (Vec2_t *v2_input_pos);
 static void update_col_shapes (Vec2_t *v2_input_pos);
 static void init_compnt_pools (void);
-static void detect_collisions (void);
-static bool_t x_pos_in_red_zone (int16_t x);
 static void normal_update (void);
+
+uint32_t gm_curr_score = 0;
+//TODO: save and load this off of memory cards.
+static uint32_t u32_high_score = 0;
 
 void
 gm_init_game (void)
 {
   init_compnt_pools ();
   player = pe_create_player_entity ();
+  s_init_scoring (&player);
+  cm_init_collision_manager (&player);
 
   pm_init_pipe_manager ();
   /*
@@ -41,7 +49,16 @@ gm_init_game (void)
   //  pm_spawn_pipe_entity ();
 }
 
-// TODO: track player score, start work on visuals
+/*
+ *  TODO: start work on visuals
+ *    - Get custom font/fntprint working
+ *      - Look at their implementation of `FntPrint`, and do something similar.
+ *      - Our font only needs to print the characters 0 to 9.
+ *      - The part that says "score" could probably just be an image.
+ *    - Print score/high score to screen
+ *    - Replace player with texture/sprite.
+ *    - Replace pipes with texture/sprite.
+ */
 void
 gm_update_game (void)
 {
@@ -51,6 +68,12 @@ gm_update_game (void)
   if (gs_curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
   {
     printf("Game over!\n");
+    if (gm_curr_score > u32_high_score)
+    {
+      printf("New high score!\n");
+      u32_high_score = gm_curr_score;
+      gm_curr_score = 0;
+    }
     gs_curr_game_state = GSTATE_GAME_OVER;
   }
 
@@ -70,6 +93,14 @@ void
 gm_destroy_game (void)
 {
   pe_destroy_player_entity (&player);
+}
+
+
+void
+gm_increase_score (void)
+{
+  gm_curr_score++;
+  printf("Score: %d\n", gm_curr_score);
 }
 
 void
@@ -116,38 +147,6 @@ init_compnt_pools (void)
 }
 
 void
-detect_collisions (void)
-{
-  uint8_t i;
-  ColShapeCompnt_t *csc_pipe;
-
-  for (i = 1; i < u8_pc_num_physics; i++)
-  {
-    if (x_pos_in_red_zone (pc_physics_pool[i].v2_position.x))
-    {
-      csc_pipe = get_col_shape_with_id(pc_physics_pool[i].i8_parent_id);
-      player.pcsc_col_shape = get_col_shape_with_id (player.u8_eid);
-
-      // FIXME: Should this send a signal instead?
-      if (csc_detect_collision (player.pcsc_col_shape, csc_pipe))
-      {
-        pe_kill_player (&player);
-      }
-    }
-  }
-}
-
-bool_t
-x_pos_in_red_zone (int16_t x)
-{
-  const int16_t i16_RED_ZONE_X =
-    ((player.u8_width >> 1) + (PIE_HALF_PIPE_WIDTH))
-    << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
-
-  return -i16_RED_ZONE_X < x && x < i16_RED_ZONE_X;
-}
-
-void
 normal_update (void)
 {
   static Vec2_t v2_entity_pos[MAX_NUM_ENTITIES] = {{0}};
@@ -155,7 +154,7 @@ normal_update (void)
   pm_manage_pipes ();
   pe_update_player (&player);
 
-  detect_collisions ();
+  cm_handle_collisions ();
   update_physics_compnts (v2_entity_pos);
   update_sprites (v2_entity_pos);
   update_col_shapes (v2_entity_pos);

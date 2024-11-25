@@ -25,7 +25,11 @@ u_seed_rng (void)
   static bool_t b_rng_seeded = FALSE;
   uint16_t u16_seed;
 
+  // FIXME: should this change really be happening here?
+  gs_curr_game_state = GSTATE_NORMAL;
+
   if (b_rng_seeded)  return;
+  b_rng_seeded = TRUE;
 
   u16_seed = TIME_GET_CURRENT_TIME();
 #ifdef DEBUG_BUILD
@@ -33,6 +37,4 @@ u_seed_rng (void)
 #endif /* DEBUG_BUILD */
 
   srand(u16_seed);
-  // FIXME: should this change really be happening here?
-  gs_curr_game_state = GSTATE_NORMAL;
 }

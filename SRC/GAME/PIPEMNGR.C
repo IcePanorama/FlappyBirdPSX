@@ -1,6 +1,5 @@
 #include "game/pipemngr.h"
 #include "game/signals.h"
-#include "game_obj/pipes.h"
 #include "sys/fb_bools.h"
 #include "sys/fb_time.h"
 
@@ -14,7 +13,7 @@
 static void destroy_pipe_entity (uint8_t u8_idx);
 static void manage_pipe_entities (void);
 
-static PipesEntity_t pp_pipes[MAX_NUM_PIPES] = {{0}};
+PipesEntity_t pp_pipes[MAX_NUM_PIPES] = {{0}};
 static uint8_t u8_num_pipes = 0;
 
 //FIXME: should return 0 on success, non-zero on failure.
@@ -23,11 +22,14 @@ pm_init_pipe_manager (void)
 {
   if (SetRCnt (RCntCNT2, 0xFFFF, RCntMdNOINTR | RCntMdFR) != 1)
   {
+#ifdef DEBUG_BUILD
     printf ("ERROR: failed to init RCntCNT2 for PipeMngr.\n");
     assert(FALSE);
+#endif /* DEBUG_BUILD */
   }
 
   memset (pp_pipes, 0, sizeof (PipesEntity_t) * MAX_NUM_PIPES);
+  u8_num_pipes = 0;
 }
 
 void
@@ -105,4 +107,22 @@ manage_pipe_entities ()
 
   for (i = 0; i < u8_num_destroyed; i++)
     destroy_pipe_entity (u8_pe_to_destroy[i]);
+}
+
+PipesEntity_t *
+pm_get_pipe (uint8_t u8_eid)
+{
+  uint8_t i;
+  for (i = 0; i < u8_num_pipes; i++)
+  {
+    if (pp_pipes[i].u8_eid == u8_eid)
+      return &pp_pipes[i];
+  }
+
+#ifdef DEBUG_BUILD
+  printf("Error: Pipe with entity id %d not found\n", u8_eid);
+  assert(FALSE);
+#endif /* DEBUG_BUILD */
+
+  return 0;
 }

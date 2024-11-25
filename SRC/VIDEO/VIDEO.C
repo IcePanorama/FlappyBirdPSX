@@ -8,6 +8,7 @@
 
 #include "compnts/sprites.h"
 #include "compnts/wiframe.h"
+#include "game/gamemngr.h"
 #include "sys/fb_ints.h"
 #include "sys/fb_defs.h"
 #include "video/scrbuff.h"
@@ -68,7 +69,9 @@ v_render_screen (void)
 
   ClearImage (&curr_sb->draw_env.clip, 100, 100, 100);
 
-  DumpOTag (curr_sb->ordering_table);
+  FntPrint("Score: %d\n", gm_curr_score);
+
+  //  DumpOTag (curr_sb->ordering_table);
   DrawOTag (curr_sb->ordering_table);
 
   FntFlush (-1);

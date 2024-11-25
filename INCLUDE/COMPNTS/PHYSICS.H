@@ -10,7 +10,7 @@
 typedef struct PhysicsCompnt_s
 {
   //FIXME: rename to `u8_parent_id`, no clue why this is signed.
-  uint8_t i8_parent_id;
+  uint8_t u8_parent_id;
   bool_t b_use_gravity;
   Vec2_t v2_position;
   Vec2_t v2_velocity;

@@ -20,6 +20,7 @@ typedef struct PipesEntity_s
   struct ColShapeCompnt_s *pcsc_col_shape_compnts[2];
   struct PhysicsCompnt_s *ppc_physics_compnts[2];
   struct SpriteCompnt_s *psc_sprite_compnts[2];
+  bool_t b_was_scored;
 } PipesEntity_t;
 
 PipesEntity_t pie_create_pipes_entity (void);
