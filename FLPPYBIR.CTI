@@ -1,0 +1,70 @@
+Disc XA_PSX
+  LeadIn XA
+    Empty    1000
+    PostGap  150
+  EndTrack
+
+  Track	XA
+    Pause	150
+    Volume	ISO9660
+      SystemArea c:\psyq\cdgen\lcnsfile\licensea.dat
+
+      PrimaryVolume
+        SystemIdentifier        "PLAYSTATION"
+        VolumeIdentifier        "FLAPPYBIRDPSX"
+        LogicalBlockSize        2048
+        VolumeSetIdentifier     "FLAPPYBIRDPSX"
+        PublisherIdentifier	"SEGFAULTEDDREAMS"
+        DataPreparerIdentifier  "SEGFAULTEDDREAMS"
+        ApplicationIdentifier   "FLAPPYBIRDPSX"
+
+        Lpath
+        OptionalLpath
+        Mpath
+        OptionalMpath
+
+        Hierarchy
+          File	FLPPYBIR.EXE;1
+            XAFileAttributes	Form1	Data
+            Source	c:\psyq\projects\flppybir\flppybir.exe
+          EndFile
+
+          File	SYSTEM.CNF;1
+            XAFileAttributes	Form1	Data
+            Source	c:\psyq\projects\flppybir\system.cnf
+          EndFile
+
+          File	FLPPYBIR.CPE;1
+            XAFileAttributes	Form1	Data
+            Source	c:\psyq\projects\flppybir\flppybir.cpe
+          EndFile
+
+          File	FLPPYBIR.SYM;1
+            XAFileAttributes	Form1	Data
+            Source	c:\psyq\projects\flppybir\flppybir.sym
+          EndFile
+
+          File	MEM.MAP;1
+            XAFileAttributes	Form1	Data
+            Source	c:\psyq\projects\flppybir\mem.map
+          EndFile
+
+          ; ==========================ASSETS====================================
+          Directory	ASSETS
+
+            File	FONT.TIM;1
+              XAFileAttributes	Form1	Data
+              Source	c:\psyq\projects\flppybir\assets\font.tim
+            EndFile
+          EndDirectory
+          ; ====================================================================
+        EndHierarchy
+      EndPrimaryVolume
+    EndVolume
+    PostGap	150
+  EndTrack
+
+  Leadout	XA
+    Empty	150
+  EndTrack
+EndDisc

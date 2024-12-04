@@ -19,6 +19,10 @@
 #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
+// tmp
+#include <libcd.h>
+#include <stdlib.h>
+
 #define DIST_TO_SCREEN (512)
 
 static void draw_sprites (u_long *ot, u_long *ot_idx);
@@ -27,12 +31,17 @@ static void draw_wireframes (u_long *ot, u_long *ot_idx);
 void
 v_init_video (void)
 {
+  CdlFILE fp;
+  uint32_t num_sectors;
+  u_long *fptr;
+
   //TODO: figure out how to handle NTSC/PAL differences elegantly
   SetVideoMode (0);
   GsInitGraph (SCREEN_WIDTH, SCREEN_HEIGHT, GsNONINTER|GsOFSGPU, 1, 0);
 
   FntLoad (960, 256);
   SetDumpFnt (FntOpen (0, 8, SCREEN_WIDTH, 64, 0, 512));
+
   SetGraphDebug (0);
 
   InitGeom ();  // Init GTE
@@ -42,6 +51,28 @@ v_init_video (void)
   sb_init_screen_buffers ();
 
   SetDispMask (1);
+
+  CdSetDebug (3);
+
+  // Load custom font.
+#ifdef DEBUG_BUILD
+  assert(CdInit() != 0);
+  assert(CdSearchFile (&fp, "ASSETS\\FONT.TIM;1"));
+  assert(CdControlB (CdlSetloc, (u_char *)&fp.pos, 0) != 0);
+  num_sectors = (fp.size+2047)/2048;
+  fptr = (u_long *)malloc (num_sectors * 2048);
+  assert (fptr != 0);
+  assert(CdRead (num_sectors, fptr, CdlModeSpeed) != 0);
+#else /* DEBUG_BUILD */
+  CdInit();
+  CdSearchFile (&fp, "ASSETS\\FONT.TIM;1");
+  CdControlB (CdlSetloc, (u_char *)&fp.pos, 0);
+  num_sectors = (fp.size+2047)/2048;
+  fptr = (u_long *)malloc (num_sectors * 2048);
+  CdRead (num_sectors, fptr, CdlModeSpeed);
+#endif /* DEBUG_BUILD */
+  CdReadSync(0, 0); // wait for operation to finish.
+  free (fptr);
 }
 
 void

@@ -8,45 +8,51 @@ SRC_DIR=SRC
 INCL_DIR=INCLUDE
 
 # Build targets
-CPE_FILE=MAIN.CPE
-SYM_FILE=MAIN.SYM
+CPE_FILE=FLPPYBIR.CPE
+SYM_FILE=FLPPYBIR.SYM
 MAP_FILE=MEM.MAP
 
 # removing clean dependency from this target fixes bug where it fails 50% of the
 # time.
 all: obj_files
-	echo "Building ..\$(CPE_FILE), ..\$(SYM_FILE), and ..\$(MAP_FILE)..."
-  	$(CC) -Xo$80020000 *.OBJ -o$(CPE_FILE),$(SYM_FILE),$(MAP_FILE) -L $(LIBRARY_PATH) -llibpad -llibc2
-	cpe2x /ca $(CPE_FILE)
+  echo "Building ..\$(CPE_FILE), ..\$(SYM_FILE), and ..\$(MAP_FILE)..."
+  $(CC) -Xo$80020000 BIN\*.OBJ -o$(CPE_FILE),$(SYM_FILE),$(MAP_FILE) -L $(LIBRARY_PATH) -llibpad -llibc2 -llibcd
+  echo "Building \$(CPE_FILE)."
+  cpe2x /ca $(CPE_FILE)
+
+full: all
+  makecd
 
 obj_files:
+  echo "Creating BIN subdir..."
+  mkdir BIN
   echo "Building object files..."
-  $(CC) $(CFLAGS) -c -oMAIN.OBJ $(SRC_DIR)\MAIN.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oUTILS.OBJ $(SRC_DIR)\UTILS.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oCOLSHAPE.OBJ $(SRC_DIR)\COMPNTS\COLSHAPE.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oSPRITES.OBJ $(SRC_DIR)\COMPNTS\SPRITES.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oPHYSICS.OBJ $(SRC_DIR)\COMPNTS\PHYSICS.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oWIFRAME.OBJ $(SRC_DIR)\COMPNTS\WIFRAME.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oCOLMNGR.OBJ $(SRC_DIR)\GAME\COLMNGR.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oGAMEMNGR.OBJ $(SRC_DIR)\GAME\GAMEMNGR.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oGMSTATE.OBJ $(SRC_DIR)\GAME\GMSTATE.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oPIPEMNGR.OBJ $(SRC_DIR)\GAME\PIPEMNGR.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oSCORE.OBJ $(SRC_DIR)\GAME\SCORE.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oSIGNALS.OBJ $(SRC_DIR)\GAME\SIGNALS.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oPLAYER.OBJ $(SRC_DIR)\GAME_OBJ\PLAYER.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oPIPES.OBJ $(SRC_DIR)\GAME_OBJ\PIPES.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oCMDLIST.OBJ $(SRC_DIR)\INPUT\CMDLIST.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oCONTROLR.OBJ $(SRC_DIR)\INPUT\CONTROLR.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oSCRBUFF.OBJ $(SRC_DIR)\VIDEO\SCRBUFF.C -I $(INCL_DIR)
-  $(CC) $(CFLAGS) -c -oVIDEO.OBJ $(SRC_DIR)\VIDEO\VIDEO.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\MAIN.OBJ $(SRC_DIR)\MAIN.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\UTILS.OBJ $(SRC_DIR)\UTILS.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\COLSHAPE.OBJ $(SRC_DIR)\COMPNTS\COLSHAPE.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\SPRITES.OBJ $(SRC_DIR)\COMPNTS\SPRITES.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\PHYSICS.OBJ $(SRC_DIR)\COMPNTS\PHYSICS.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\WIFRAME.OBJ $(SRC_DIR)\COMPNTS\WIFRAME.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\COLMNGR.OBJ $(SRC_DIR)\GAME\COLMNGR.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\GAMEMNGR.OBJ $(SRC_DIR)\GAME\GAMEMNGR.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\GMSTATE.OBJ $(SRC_DIR)\GAME\GMSTATE.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\PIPEMNGR.OBJ $(SRC_DIR)\GAME\PIPEMNGR.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\SCORE.OBJ $(SRC_DIR)\GAME\SCORE.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\SIGNALS.OBJ $(SRC_DIR)\GAME\SIGNALS.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\PLAYER.OBJ $(SRC_DIR)\GAME_OBJ\PLAYER.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\PIPES.OBJ $(SRC_DIR)\GAME_OBJ\PIPES.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\CMDLIST.OBJ $(SRC_DIR)\INPUT\CMDLIST.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\CONTROLR.OBJ $(SRC_DIR)\INPUT\CONTROLR.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\SCRBUFF.OBJ $(SRC_DIR)\VIDEO\SCRBUFF.C -I $(INCL_DIR)
+  $(CC) $(CFLAGS) -c -oBIN\VIDEO.OBJ $(SRC_DIR)\VIDEO\VIDEO.C -I $(INCL_DIR)
 
 clean:
-	del *.cpe
-	del *.CPE
-	del *.sym
-	del *.SYM
-	del *.map
-	del *.MAP
-	del *.obj
-	del *.OBJ
-	del *.EXE
+  del *.exe
+  del *.cpe
+  del *.sym
+  del *.map
+  del bin\*.obj
+  rmdir bin
+  del cdrom\*.img
+  del cdrom\*.iso
+  rmdir cdrom
