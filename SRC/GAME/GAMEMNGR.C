@@ -67,10 +67,14 @@ gm_update_game (void)
 
   if (gs_curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
   {
+#ifdef DEBUG_BUILD
     printf("Game over!\n");
+#endif /* DEBUG_BUILD */
     if (gm_curr_score > u32_high_score)
     {
+#ifdef DEBUG_BUILD
       printf("New high score!\n");
+#endif /* DEBUG_BUILD */
       u32_high_score = gm_curr_score;
       gm_curr_score = 0;
     }
@@ -100,7 +104,6 @@ void
 gm_increase_score (void)
 {
   gm_curr_score++;
-  printf("Score: %d\n", gm_curr_score);
 }
 
 void

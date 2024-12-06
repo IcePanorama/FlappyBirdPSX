@@ -1,7 +1,5 @@
 CC=ccpsx
-
-# -fcaller-saves 
-# -fcse-skip-blocks -fdelayed-branch -fno-peephole -fschedule-insns -fschedule-insns2 -fstrength-reduce -fthread-jumps 
+ 
 CFLAGS=-O3 -ansi -Wall -Werror -pedantic-errors -Wshadow -DDEBUG_BUILD
 
 SRC_DIR=SRC

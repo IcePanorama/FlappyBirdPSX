@@ -27,14 +27,11 @@
 
 static void draw_sprites (u_long *ot, u_long *ot_idx);
 static void draw_wireframes (u_long *ot, u_long *ot_idx);
+static void load_font (void);
 
 void
 v_init_video (void)
 {
-  CdlFILE fp;
-  uint32_t num_sectors;
-  u_long *fptr;
-
   //TODO: figure out how to handle NTSC/PAL differences elegantly
   SetVideoMode (0);
   GsInitGraph (SCREEN_WIDTH, SCREEN_HEIGHT, GsNONINTER|GsOFSGPU, 1, 0);
@@ -50,53 +47,90 @@ v_init_video (void)
 
   sb_init_screen_buffers ();
 
-  SetDispMask (1);
+  load_font ();
 
+  SetDispMask (1);
+}
+
+#define FONT_FILE_NUM_SECTORS (5)
+#define FONT_FILE_DATA_SIZE ((FONT_FILE_NUM_SECTORS) << 11)
+
+void
+load_font (void)
+{
+  CdlFILE fptr;
+  u_long font_data[(FONT_FILE_DATA_SIZE)] = {0};
+  TIM_IMAGE font_img;
+
+#ifdef DEBUG_BUILD
   CdSetDebug (3);
 
-  // Load custom font.
-#ifdef DEBUG_BUILD
   assert(CdInit() != 0);
-  assert(CdSearchFile (&fp, "ASSETS\\FONT.TIM;1"));
-  assert(CdControlB (CdlSetloc, (u_char *)&fp.pos, 0) != 0);
-  num_sectors = (fp.size+2047)/2048;
-  fptr = (u_long *)malloc (num_sectors * 2048);
-  assert (fptr != 0);
-  assert(CdRead (num_sectors, fptr, CdlModeSpeed) != 0);
+  assert(CdSearchFile (&fptr, "\\ASSETS\\FONT.TIM;1") != 0);
+  assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
+  assert(CdRead ((FONT_FILE_NUM_SECTORS), font_data, CdlModeSpeed) != 0);
 #else /* DEBUG_BUILD */
-  CdInit();
-  CdSearchFile (&fp, "ASSETS\\FONT.TIM;1");
-  CdControlB (CdlSetloc, (u_char *)&fp.pos, 0);
-  num_sectors = (fp.size+2047)/2048;
-  fptr = (u_long *)malloc (num_sectors * 2048);
-  CdRead (num_sectors, fptr, CdlModeSpeed);
+  if (CdInit() == 0 || CdSearchFile (&fptr, "\\ASSETS\\FONT.TIM;1") == 0 ||
+    CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) == 0 ||
+    CdRead ((FONT_FILE_NUM_SECTORS), font_data, CdlModeSpeed) == 0)
+  {
+    exit (-1);
+  }
 #endif /* DEBUG_BUILD */
   CdReadSync(0, 0); // wait for operation to finish.
-  free (fptr);
+
+  assert(OpenTIM (font_data) == 0);
+  assert(ReadTIM (&font_img) != 0);
+  LoadImage (font_img.crect, font_img.caddr);
+  printf ("clut: %d %d\n", font_img.crect->x, font_img.crect->y);
+  DrawSync (0);
+  LoadImage (font_img.prect, font_img.paddr);
+  printf ("data: %d %d %d %d\n", font_img.prect->x, font_img.prect->y, font_img.prect->w, font_img.prect->h);
+  DrawSync (0);
 }
 
 void
 v_render_screen (void)
 {
+  POLY_FT4 test;
+
   u_long ot_idx = 0;
   static ScreenBuffer_t *curr_sb = screen_buffers;
   curr_sb = (curr_sb == screen_buffers) ? screen_buffers + 1 : screen_buffers;
 
   ClearOTag (curr_sb->ordering_table, OT_MAX_LEN);
+  /*
 
   draw_sprites (curr_sb->ordering_table, &ot_idx);
 
-  /* Draw player sprite on top. This assumes player is always sprite 0. */
+  * Draw player sprite on top. This assumes player is always sprite 0. *
   AddPrim (&curr_sb->ordering_table[ot_idx], &sp_sprite_pool[0].p4_sprite);
   ot_idx++;
 
   draw_wireframes (curr_sb->ordering_table, &ot_idx);
+*/
+
+  SetPolyFT4 (&test);
+  SetShadeTex (&test, 1);
+  test.tpage = GetTPage (0, 0, 320, 1);
+  //  DumpTPage(test.tpage);
+  test.clut = GetClut (320, 0);
+  //  DumpClut(test.clut);
+  setXY4(&test,       10,      50,
+	 256 + 10,      50,
+	 10, 64 + 50,
+	 256 + 10, 64 + 50
+	 );
+  setUV4(&test, 0, 0, 255, 0, 0, 64, 255, 64);
+  //setRGB0(&test, 0xff, 0xff, 0xff);
+  AddPrim (&curr_sb->ordering_table[ot_idx], &test);
 
   DrawSync (0);
   VSync (0);
 
   PutDrawEnv (&curr_sb->draw_env);
   PutDispEnv (&curr_sb->disp_env);
+  ot_idx++;
 
   ClearImage (&curr_sb->draw_env.clip, 100, 100, 100);
 
