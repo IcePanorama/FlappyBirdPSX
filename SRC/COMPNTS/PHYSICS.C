@@ -135,9 +135,3 @@ manage_screen_position_signals (PhysicsCompnt_t *pc)
   else if (pc->v2_position.y < (ABOVE_SCREEN_Y))
     si_send_signal(pc->u8_parent_id, SIG_ABOVE_SCREEN);
 }
-
-#undef GRAVITY
-#undef ABOVE_SCREEN_Y
-#undef BELOW_SCREEN_Y
-#undef OFF_SCREEN_LEFT
-#undef OFF_SCREEN_RIGHT
