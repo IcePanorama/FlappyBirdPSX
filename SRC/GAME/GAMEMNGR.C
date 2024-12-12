@@ -6,6 +6,7 @@
 #include "game/colmngr.h"
 #include "game/pipemngr.h"
 #include "game/score.h"
+#include "game/scrwritr.h"
 #include "game/signals.h"
 #include "game_obj/pipes.h"
 #include "game_obj/player.h"
@@ -31,6 +32,10 @@ static void normal_update (void);
 uint32_t gm_curr_score = 0;
 //TODO: save and load this off of memory cards.
 static uint32_t u32_high_score = 0;
+static uint8_t u8_score_msg_id;
+static uint8_t u8_game_over_msg_id;
+static uint8_t u8_high_score_msg_id;
+static bool_t b_new_high_score = FALSE;
 
 void
 gm_init_game (void)
@@ -38,6 +43,7 @@ gm_init_game (void)
   init_compnt_pools ();
   player = pe_create_player_entity ();
   s_init_scoring (&player);
+  u8_score_msg_id = sw_print("0", (SCREEN_WIDTH) >> 1, (SCREEN_HEIGHT) >> 2);
   cm_init_collision_manager (&player);
 
   pm_init_pipe_manager ();
@@ -51,13 +57,9 @@ gm_init_game (void)
 
 /*
  *  TODO: start work on visuals
- *    - Get custom font/fntprint working
- *      - Look at their implementation of `FntPrint`, and do something similar.
- *      - Our font only needs to print the characters 0 to 9.
- *      - The part that says "score" could probably just be an image.
- *    - Print score/high score to screen
  *    - Replace player with texture/sprite.
  *    - Replace pipes with texture/sprite.
+ *    - Add scrolling background
  */
 void
 gm_update_game (void)
@@ -67,14 +69,12 @@ gm_update_game (void)
 
   if (gs_curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
   {
-#ifdef DEBUG_BUILD
-    printf("Game over!\n");
-#endif /* DEBUG_BUILD */
+    u8_game_over_msg_id = sw_print("Game over!", (SCREEN_WIDTH) >> 1, ((SCREEN_HEIGHT) >> 2) + (SW_FONT_SPRITE_HEIGHT));
     if (gm_curr_score > u32_high_score)
     {
-#ifdef DEBUG_BUILD
-      printf("New high score!\n");
-#endif /* DEBUG_BUILD */
+      u8_high_score_msg_id = sw_print("New high score!", (SCREEN_WIDTH) >> 1,
+                                      ((SCREEN_HEIGHT) >> 2) + ((SW_FONT_SPRITE_HEIGHT) << 1));
+      b_new_high_score = TRUE;
       u32_high_score = gm_curr_score;
       gm_curr_score = 0;
     }
@@ -103,7 +103,11 @@ gm_destroy_game (void)
 void
 gm_increase_score (void)
 {
+  char score_buffer[7] = {0}; // max val: 999999\0
   gm_curr_score++;
+  sprintf(score_buffer, "%d", gm_curr_score);
+  sw_destroy_text_output (u8_score_msg_id);
+  u8_score_msg_id = sw_print(score_buffer, (SCREEN_WIDTH) >> 1, (SCREEN_HEIGHT) >> 2);
 }
 
 void
@@ -166,6 +170,13 @@ normal_update (void)
 void
 gm_restart_game (void)
 {
+  sw_destroy_text_output (u8_score_msg_id);
+  sw_destroy_text_output (u8_game_over_msg_id);
+  if (b_new_high_score)
+  {
+    sw_destroy_text_output (u8_high_score_msg_id);
+    b_new_high_score = FALSE;
+  }
   gm_destroy_game ();
   gm_init_game ();
   gs_curr_game_state = GSTATE_GAME_START;

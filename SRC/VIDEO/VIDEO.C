@@ -20,11 +20,15 @@
 #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
+//tmp
+#include "sys/fb_bools.h"
+
 #define DIST_TO_SCREEN (512)
 
 static void draw_sprites (u_long *ot, u_long *ot_idx);
 static void draw_wireframes (u_long *ot, u_long *ot_idx);
 static void dump_font_img (u_long *ot, u_long *ot_idx);
+static void draw_text_output (u_long *ot, u_long *ot_idx);
 
 void
 v_init_video (void)
@@ -63,7 +67,9 @@ v_render_screen (void)
   AddPrim (&curr_sb->ordering_table[ot_idx], &sp_sprite_pool[0].p4_sprite);
   ot_idx++;
 
-  dump_font_img (curr_sb->ordering_table, &ot_idx);
+  if (FALSE) dump_font_img (curr_sb->ordering_table, &ot_idx);
+
+  draw_text_output (curr_sb->ordering_table, &ot_idx);
 
   DrawSync (0);
   VSync (0);
@@ -72,8 +78,6 @@ v_render_screen (void)
   PutDispEnv (&curr_sb->disp_env);
 
   ClearImage (&curr_sb->draw_env.clip, 100, 100, 100);
-
-  FntPrint("Score: %d\n", gm_curr_score);
 
   //  DumpOTag (curr_sb->ordering_table);
   DrawOTag (curr_sb->ordering_table);
@@ -141,4 +145,32 @@ dump_font_img (u_long *ot, u_long *ot_idx)
 #endif /* DEBUG_BUILD */
   AddPrim (&ot[(*ot_idx)], &test);
   (*ot_idx)++;
+}
+
+void
+draw_text_output (u_long *ot, u_long *ot_idx)
+{
+  uint8_t i;
+  uint8_t j;
+  static DR_TPAGE tpage;
+
+  SetDrawTPage(&tpage, 0, 0, sw_font_tpage_id);
+#ifdef DEBUG_BUILD
+  assert((*ot_idx) < OT_MAX_LEN);
+#endif /* DEBUG_BUILD */
+  AddPrim(&ot[(*ot_idx)], &tpage);
+  (*ot_idx)++;
+
+  for (i = 0; i < sw_num_outputs; i++)
+  {
+    for (j = 0; j < sw_output_pool[i].u8_length; j++)
+    {
+#ifdef DEBUG_BUILD
+      assert((*ot_idx) < OT_MAX_LEN);
+#endif /* DEBUG_BUILD */
+
+      AddPrim (&ot[(*ot_idx)], &sw_output_pool[i].glyphs[j]);
+      (*ot_idx)++;
+    }
+  }
 }
