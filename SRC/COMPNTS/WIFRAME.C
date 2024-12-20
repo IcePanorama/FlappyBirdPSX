@@ -1,8 +1,8 @@
 #include "compnts/wiframe.h"
 
 #ifdef DEBUG_BUILD
-#include <stdio.h>
-#include <assert.h>
+  #include <stdio.h>
+  #include <assert.h>
 #endif /* DEBUG_BUILD */
 
 WireframeCompnt_t wfc_wireframe_pool[(WIFRAME_MAX_NUM_WIREFRAMES)];

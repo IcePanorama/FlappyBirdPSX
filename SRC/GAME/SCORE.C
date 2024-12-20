@@ -5,8 +5,8 @@
 #include "sys/fb_defs.h"
 
 #ifdef DEBUG_BUILD
-#include <assert.h>
-#include <stdio.h>
+  #include <assert.h>
+  #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 static PlayerEntity_t *player;
@@ -44,6 +44,6 @@ s_process_scoring (uint8_t u8_eid)
   if (!p->b_was_scored)
   {
     gm_increase_score ();
-    p->b_was_scored = TRUE;
+    p->b_was_scored = (TRUE);
   }
 }

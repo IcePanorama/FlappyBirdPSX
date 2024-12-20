@@ -15,16 +15,17 @@ void
 sb_init_screen_buffers (void)
 {
   //TODO: I may be able to afford 480i, given how simple FB is.
-  SetDefDrawEnv (&screen_buffers[0].draw_env, 0, 0, SCREEN_WIDTH,
+	SetDefDrawEnv (&screen_buffers[0].draw_env, 0, 0, SCREEN_WIDTH,
                  SCREEN_HEIGHT);
-  SetDefDrawEnv (&screen_buffers[1].draw_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
+	SetDefDrawEnv (&screen_buffers[1].draw_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
                  SCREEN_HEIGHT);
-  SetDefDispEnv (&screen_buffers[0].disp_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
+	SetDefDispEnv (&screen_buffers[0].disp_env, 0, SCREEN_HEIGHT, SCREEN_WIDTH,
                  SCREEN_HEIGHT);
-  SetDefDispEnv (&screen_buffers[1].disp_env, 0, 0, SCREEN_WIDTH,
+	SetDefDispEnv (&screen_buffers[1].disp_env, 0, 0, SCREEN_WIDTH,
                  SCREEN_HEIGHT);
 
   screen_buffers[0].draw_env.isbg = screen_buffers[1].draw_env.isbg = 1;
+  //todo: make black
   setRGB0(&screen_buffers[0].draw_env, 100, 100, 100);
   setRGB0(&screen_buffers[1].draw_env, 100, 100, 100);
 }

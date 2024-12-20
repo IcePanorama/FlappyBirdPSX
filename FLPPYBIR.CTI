@@ -34,28 +34,24 @@ Disc XA_PSX
             Source	c:\psyq\projects\flppybir\system.cnf
           EndFile
 
-          File	FLPPYBIR.CPE;1
-            XAFileAttributes	Form1	Data
-            Source	c:\psyq\projects\flppybir\flppybir.cpe
-          EndFile
-
-          File	FLPPYBIR.SYM;1
-            XAFileAttributes	Form1	Data
-            Source	c:\psyq\projects\flppybir\flppybir.sym
-          EndFile
-
-          File	MEM.MAP;1
-            XAFileAttributes	Form1	Data
-            Source	c:\psyq\projects\flppybir\mem.map
-          EndFile
-
           ; ==========================ASSETS====================================
           Directory	ASSETS
-
             File	FONT.TIM;1
               XAFileAttributes	Form1	Data
               Source	c:\psyq\projects\flppybir\assets\font.tim
             EndFile
+            ; SPRITES===========================================================
+            Directory	SPRITES
+              File	PIPE.TIM;1
+                XAFileAttributes	Form1	Data
+                Source	c:\psyq\projects\flppybir\assets\sprites\pipe.tim
+              EndFile
+              File	TOP_PIPE.TIM;1
+                XAFileAttributes	Form1	Data
+                Source	c:\psyq\projects\flppybir\assets\sprites\top_pipe.tim
+              EndFile
+            EndDirectory
+            ; ==================================================================
           EndDirectory
           ; ====================================================================
         EndHierarchy
@@ -63,7 +59,6 @@ Disc XA_PSX
     EndVolume
     PostGap	150
   EndTrack
-
   Leadout	XA
     Empty	150
   EndTrack

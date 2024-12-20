@@ -9,8 +9,8 @@
 #include "sys/fb_ints.h"
 #include "sys/fb_vecs.h"
 
-#define PIE_PIPE_WIDTH (34)
-#define PIE_HALF_PIPE_WIDTH (PIE_PIPE_WIDTH >> 1)
+#define PIE_PIPE_WIDTH (32)
+#define PIE_HALF_PIPE_WIDTH ((PIE_PIPE_WIDTH) >> 1)
 
 typedef struct PipesEntity_s
 {

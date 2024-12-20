@@ -7,7 +7,7 @@
 #include <rand.h>
 
 #ifdef DEBUG_BUILD
-#include <stdio.h>
+  #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 void

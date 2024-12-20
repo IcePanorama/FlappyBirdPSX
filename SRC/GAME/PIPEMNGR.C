@@ -4,8 +4,8 @@
 #include "sys/fb_time.h"
 
 #ifdef DEBUG_BUILD
-#include <assert.h>
-#include <stdio.h>
+  #include <assert.h>
+  #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_PIPES (10)
@@ -68,6 +68,24 @@ pm_spawn_pipe_entity ()
   u8_num_pipes++;
 }
 
+PipesEntity_t *
+pm_get_pipe (uint8_t u8_eid)
+{
+  uint8_t i;
+  for (i = 0; i < u8_num_pipes; i++)
+  {
+    if (pp_pipes[i].u8_eid == u8_eid)
+      return &pp_pipes[i];
+  }
+
+#ifdef DEBUG_BUILD
+  printf("Error: Pipe with entity id %d not found\n", u8_eid);
+  assert(FALSE);
+#endif /* DEBUG_BUILD */
+
+  return 0;
+}
+
 void
 destroy_pipe_entity (uint8_t u8_idx)
 {
@@ -106,23 +124,5 @@ manage_pipe_entities ()
   }
 
   for (i = 0; i < u8_num_destroyed; i++)
-    destroy_pipe_entity (u8_pe_to_destroy[i]);
-}
-
-PipesEntity_t *
-pm_get_pipe (uint8_t u8_eid)
-{
-  uint8_t i;
-  for (i = 0; i < u8_num_pipes; i++)
-  {
-    if (pp_pipes[i].u8_eid == u8_eid)
-      return &pp_pipes[i];
-  }
-
-#ifdef DEBUG_BUILD
-  printf("Error: Pipe with entity id %d not found\n", u8_eid);
-  assert(FALSE);
-#endif /* DEBUG_BUILD */
-
-  return 0;
+      destroy_pipe_entity (u8_pe_to_destroy[i]);
 }

@@ -12,7 +12,7 @@
 
 #define SW_FONT_SPRITE_HEIGHT (16)
 
-#define SW_MAX_NUM_GLYPHS (256)
+#define SW_MAX_NUM_GLYPHS (255)
 #define SW_MAX_NUM_TEXT_OUTPUTS (32)
 
 /* Don't touch! CC is very particular about the order of all of these. */
@@ -36,7 +36,7 @@ typedef struct TextOutput_s
  */
 extern TextOutput_t sw_output_pool[(SW_MAX_NUM_TEXT_OUTPUTS)];
 extern uint8_t sw_num_outputs;
-extern u_short sw_font_tpage_id;
+//extern u_short sw_font_tpage_id;
 
 void sw_init (void);
 //void sw_print_char (const char c, uint16_t x, uint16_t y);

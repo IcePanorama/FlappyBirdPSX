@@ -4,8 +4,8 @@
 #include "sys/fb_defs.h"
 
 #ifdef DEBUG_BUILD
-#include <stdio.h>
-#include <assert.h>
+  #include <stdio.h>
+  #include <assert.h>
 #endif /* DEBUG_BUILD */
 
 #define GRAVITY (4) // approx. for 9.8 / 2, in m/s^(2)
@@ -13,11 +13,11 @@
 /** For position-related signals. */
 #define BUFFER_ZONE_SIZE (64) // No sprite should be larger than 64x64.
 #define BELOW_SCREEN_Y \
-(((HALF_SCREEN_HEIGHT) + (BUFFER_ZONE_SIZE)) \
+  (((HALF_SCREEN_HEIGHT) + (BUFFER_ZONE_SIZE)) \
   << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
 #define ABOVE_SCREEN_Y (-(BELOW_SCREEN_Y))
 #define OFF_SCREEN_RIGHT \
-(((HALF_SCREEN_WIDTH) + (BUFFER_ZONE_SIZE)) \
+  (((HALF_SCREEN_WIDTH) + (BUFFER_ZONE_SIZE)) \
   << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
 #define OFF_SCREEN_LEFT (-(OFF_SCREEN_RIGHT))
 /**********************************/
@@ -27,8 +27,17 @@ uint8_t u8_pc_num_physics = 0;
 
 static void manage_screen_position_signals (PhysicsCompnt_t *pc);
 
+
 void
-create_new_physics_compnt (int8_t i8_id)
+pc_init_physics_compnt_pool (void)
+{
+  memset (pc_physics_pool, 0,
+          sizeof (PhysicsCompnt_t) * PHYSICS_MAX_NUM_PHYSICS_COMP);
+  u8_pc_num_physics = 0;
+}
+
+PhysicsCompnt_t *
+pc_create_new_physics_compnt (int8_t i8_id)
 {
 #ifdef DEBUG_BUILD
   assert((u8_pc_num_physics + 1) < PHYSICS_MAX_NUM_PHYSICS_COMP);
@@ -36,6 +45,7 @@ create_new_physics_compnt (int8_t i8_id)
 
   pc_physics_pool[u8_pc_num_physics].u8_parent_id = i8_id;
   u8_pc_num_physics++;
+  return &pc_physics_pool[u8_pc_num_physics - 1];
 }
 
 void
@@ -98,14 +108,13 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
   if (pc->b_use_gravity)
   {
     if (pc->v2_velocity.y > 0)
-      pc->v2_velocity.y -= (1 << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+       pc->v2_velocity.y -= (1 << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
     else
       pc->v2_velocity.y -= (GRAVITY);
   }
 
   pc->v2_position.x += pc->v2_velocity.x;
 
-  // Score observer code goes here.
   if (s_in_green_area(pc->v2_position.x))
     s_process_scoring (pc->u8_parent_id);
 
@@ -113,14 +122,6 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
   v2_output_pos->y = pc->v2_position.y;
 
   manage_screen_position_signals (pc);
-}
-
-void
-pc_init_physics_compnt_pool (void)
-{
-  memset (pc_physics_pool, 0,
-          sizeof (PhysicsCompnt_t) * PHYSICS_MAX_NUM_PHYSICS_COMP);
-  u8_pc_num_physics = 0;
 }
 
 void

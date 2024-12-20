@@ -1,22 +1,40 @@
 #include "compnts/sprites.h"
 
 #ifdef DEBUG_BUILD
-#include <stdio.h>
-#include <assert.h>
+  #include <stdio.h>
+  #include <assert.h>
 #endif /* DEBUG_BUILD */
 
 SpriteCompnt_t sp_sprite_pool[SPRITES_MAX_NUM_SPRITES];// = {{0}};
 uint8_t sp_num_sprites = 0;
 
 void
-create_new_sprite (uint8_t u8_id)
+sc_init_sprite_compnt_pool (void)
+{
+  uint8_t i;
+
+  memset (sp_sprite_pool, 0,
+          sizeof (SpriteCompnt_t) * SPRITES_MAX_NUM_SPRITES);
+  sp_num_sprites = 0;
+
+  for (i = 0; i < SPRITES_MAX_NUM_SPRITES; i++)
+  {
+    SetPolyFT4 (&sp_sprite_pool[i].p4_sprite);
+    SetShadeTex (&sp_sprite_pool[i].p4_sprite, 1);
+    setRGB0(&sp_sprite_pool[i].p4_sprite, 0xFF, 0xFF, 0xFF);
+  }
+}
+
+SpriteCompnt_t *
+sc_create_new_sprite (uint8_t u8_id)
 {
 #ifdef DEBUG_BUILD
   assert((sp_num_sprites + 1) < SPRITES_MAX_NUM_SPRITES);
 #endif /* DEBUG_BUILD */
 
-  sp_sprite_pool[sp_num_sprites].i8_parent_id = u8_id;
+  sp_sprite_pool[sp_num_sprites].u8_parent_id = u8_id;
   sp_num_sprites++;
+  return &sp_sprite_pool[sp_num_sprites - 1];
 }
 
 void
@@ -28,7 +46,7 @@ destroy_sprite (uint8_t u8_id)
 
   for (i = 0; i < sp_num_sprites; i++)
   {
-    if (sp_sprite_pool[i].i8_parent_id == u8_id)
+    if (sp_sprite_pool[i].u8_parent_id == u8_id)
     {
       u8_idx = i;
       break;
@@ -57,7 +75,7 @@ get_sprite_with_id (uint8_t u8_id)
 
   for (i = 0; i < sp_num_sprites; i++)
   {
-    if (sp_sprite_pool[i].i8_parent_id == u8_id)
+    if (sp_sprite_pool[i].u8_parent_id == u8_id)
     {
       return &sp_sprite_pool[i];
     }
@@ -69,12 +87,4 @@ get_sprite_with_id (uint8_t u8_id)
 #endif /* DEBUG_BUILD */
 
   return 0;
-}
-
-void
-sc_init_sprite_compnt_pool (void)
-{
-  memset (sp_sprite_pool, 0,
-          sizeof (SpriteCompnt_t) * SPRITES_MAX_NUM_SPRITES);
-  sp_num_sprites = 0;
 }

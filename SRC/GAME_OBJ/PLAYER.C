@@ -4,12 +4,14 @@
 #include "compnts/sprites.h"
 #include "game/signals.h"
 #include "game_obj/entityid.h"
+#include "game_obj/pipes.h"
 #include "sys/fb_defs.h"
+#include "video/textlkup.h"
 #include "utils.h"
 
 #ifdef DEBUG_BUILD
-#include <stdio.h>
-#include <assert.h>
+  #include <stdio.h>
+  #include <assert.h>
 #endif /* DEBUG_BUILD */
 
 #define PLAYER_SIZE (16)
@@ -35,16 +37,14 @@ pe_create_player_entity (void)
   pe.u8_flags |= (1 << (FL_ALIVE));
   pe.u8_width = pe.u8_height = (PLAYER_SIZE);
 
-
   init_player_physics_compnt (&pe, &v2_pos);
 
   init_player_sprite_compnt (&pe);
-  if (&pe.psc_sprite_compnt != 0)
-    pe_update_player_sprite_xy (pe.psc_sprite_compnt, &v2_pos);
+  pe_update_player_sprite_xy (pe.psc_sprite_compnt, &v2_pos);
   pe.psc_sprite_compnt = 0;  // set this to NULL when we're done w/ it.
 
-  csc_create_new_col_shape (pe.u8_eid, pe.u8_width, pe.u8_height);
-  pe.pcsc_col_shape = get_col_shape_with_id (pe.u8_eid);
+  pe.pcsc_col_shape =
+    csc_create_new_col_shape (pe.u8_eid, pe.u8_width, pe.u8_height);
   csc_update_col_shape (pe.pcsc_col_shape, &v2_pos);
 
   return pe;
@@ -54,12 +54,7 @@ pe_create_player_entity (void)
 void
 init_player_physics_compnt (PlayerEntity_t *pe, Vec2_t *v2_output_pos)
 {
-  create_new_physics_compnt (pe->u8_eid);
-  pe->ppc_physics_compnt = get_physics_compnt_with_id(pe->u8_eid);
-
-#ifdef DEBUG_BUILD
-  assert(pe->ppc_physics_compnt != 0);
-#endif /* DEBUG_BUILD */
+  pe->ppc_physics_compnt = pc_create_new_physics_compnt (pe->u8_eid);
 
   pe->ppc_physics_compnt->v2_position.x = 0;
   pe->ppc_physics_compnt->v2_position.y = 0;
@@ -78,19 +73,16 @@ init_player_physics_compnt (PlayerEntity_t *pe, Vec2_t *v2_output_pos)
 void
 init_player_sprite_compnt (PlayerEntity_t *pe)
 {
-  create_new_sprite (pe->u8_eid);
-  pe->psc_sprite_compnt = get_sprite_with_id(pe->u8_eid);
+  pe->psc_sprite_compnt = sc_create_new_sprite (pe->u8_eid);
 
   pe->psc_sprite_compnt->u8_width = pe->u8_width;
   pe->psc_sprite_compnt->u8_height = pe->u8_height;
 
-#ifdef DEBUG_BUILD
-  assert(pe->psc_sprite_compnt != 0);
-#endif /* DEBUG_BUILD */
-
-  SetPolyF4 (&pe->psc_sprite_compnt->p4_sprite);
-  SetShadeTex (&pe->psc_sprite_compnt->p4_sprite, 1);
-  setRGB0(&pe->psc_sprite_compnt->p4_sprite, 0, 255, 0);
+  pe->psc_sprite_compnt->p4_sprite.clut =
+    texture_clut_lookup[TEXTID_PIPE_BOT_TEXTURE];
+  pe->psc_sprite_compnt->p4_sprite.tpage =
+    texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE];
+//  setWH(&pe->psc_sprite_compnt->p4_sprite, pe->u8_width, pe->u8_height);
 
   pe->psc_sprite_compnt->update = pe_update_player_sprite_xy;
 }
@@ -99,31 +91,28 @@ void
 pe_update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
 {
   Vec2_t v2_cs_pos;  // camera-space position
-  uint8_t u8_half_width;
-  uint8_t u8_half_height;
   uint16_t u16_left_x;
-  uint16_t u16_right_x;
   uint16_t u16_top_y;
-  uint16_t u16_bot_y;
 
   if (sc == 0 || v2_pos == 0)
     return;
 
-  u8_half_width = sc->u8_width >> 1;
-  u8_half_height = sc->u8_height >> 1;
-
   v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
 
-  u16_left_x  = v2_cs_pos.x - u8_half_width;
-  u16_right_x = v2_cs_pos.x + u8_half_width;
-  u16_top_y   = v2_cs_pos.y - u8_half_height;
-  u16_bot_y   = v2_cs_pos.y + u8_half_height;
+  u16_left_x  = v2_cs_pos.x - (sc->u8_width >> 1);
+  u16_top_y   = v2_cs_pos.y - (sc->u8_height >> 1);
 
-  setXY4(&sc->p4_sprite,
-         u16_left_x, u16_top_y,
-         u16_right_x, u16_top_y,
-         u16_left_x, u16_bot_y,
-         u16_right_x, u16_bot_y);
+  setXYWH(&sc->p4_sprite, u16_left_x, u16_top_y, sc->u8_width, sc->u8_height);
+  setUVWH(&sc->p4_sprite, 0, 0, sc->u8_width, sc->u8_height);
+}
+
+void
+pe_update_player (PlayerEntity_t *pe)
+{
+  if (si_check_inbox (pe->u8_eid) == SIG_BELOW_SCREEN)
+  {
+    pe_kill_player(pe);
+  }
 }
 
 void
@@ -143,7 +132,7 @@ pe_make_player_jump (void *e)
 {
   PlayerEntity_t *pe = (PlayerEntity_t *)e;
   if (pe == 0)
-    return;
+     return;
 
   pe->ppc_physics_compnt = get_physics_compnt_with_id(pe->u8_eid);
   if (pe->ppc_physics_compnt == 0)
@@ -158,15 +147,6 @@ pe_kill_player (PlayerEntity_t *pe)
 {
   //TODO: play death animation/sound
   pe->u8_flags &= ~(1 << (FL_ALIVE));
-}
-
-void
-pe_update_player (PlayerEntity_t *pe)
-{
-  if (si_check_inbox (pe->u8_eid) == SIG_BELOW_SCREEN)
-  {
-    pe_kill_player(pe);
-  }
 }
 
 bool_t

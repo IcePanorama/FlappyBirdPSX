@@ -1,14 +1,15 @@
 #include "game/scrwritr.h"
 #include "sys/fb_defs.h"
+#include "video/textlkup.h"
 
 #include <libcd.h>
 #include <string.h>
 
 #ifdef DEBUG_BUILD
-#include "sys/fb_bools.h"
+  #include "sys/fb_bools.h"
 
-#include <assert.h>
-#include <stdio.h>
+  #include <assert.h>
+  #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
 #define FONT_FILE_NUM_SECTORS (5)
@@ -20,25 +21,34 @@
 
 TextOutput_t sw_output_pool[(SW_MAX_NUM_TEXT_OUTPUTS)] = {{0}};
 uint8_t sw_num_outputs = 0;
-u_short sw_font_tpage_id;
 
 static void load_font (void);
-static uint8_t create_new_text_output (void);
+static TextOutput_t *create_new_text_output (void);
 static TextOutput_t *get_text_output (uint8_t u8_id);
 // TODO: create macro version of this!
 static uint8_t calculate_glyph_idx (char c);
 
-static u_short FONT_CLUT_ID;
-
 void
 sw_init (void)
 {
+  uint8_t i;
+  uint8_t j;
+
   memset (sw_output_pool, 0, sizeof (TextOutput_t) * (SW_MAX_NUM_TEXT_OUTPUTS));
   sw_num_outputs = 0;
 
   load_font ();
-  FONT_CLUT_ID = GetClut ((SW_FONT_CLUT_X), (SW_FONT_CLUT_Y));
-  sw_font_tpage_id = GetTPage (0, 0, (SW_FONT_TPAGE_X), (SW_FONT_TPAGE_Y));
+
+  for (i = 0; i < SW_MAX_NUM_TEXT_OUTPUTS; i++)
+  {
+    for (j = 0; j < SW_MAX_NUM_GLYPHS; j++)
+    {
+      SetSprt16(&sw_output_pool[i].glyphs[j]);
+      setRGB0(&sw_output_pool[i].glyphs[j], 0xFF, 0xFF, 0xFF);
+      sw_output_pool[i].glyphs[j].clut =
+        texture_clut_lookup[TEXTID_FONT_TEXTURE];
+    }
+  }
 }
 
 void
@@ -49,16 +59,13 @@ load_font (void)
   TIM_IMAGE font_img;
 
 #ifdef DEBUG_BUILD
-  CdSetDebug (3);
-
-  assert(CdInit() != 0);
   assert(CdSearchFile (&fptr, "\\ASSETS\\FONT.TIM;1") != 0);
   assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
   assert(CdRead ((FONT_FILE_NUM_SECTORS), font_data, CdlModeSpeed) != 0);
 #else /* DEBUG_BUILD */
   if (CdInit() == 0 || CdSearchFile (&fptr, "\\ASSETS\\FONT.TIM;1") == 0 ||
-    CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) == 0 ||
-    CdRead ((FONT_FILE_NUM_SECTORS), font_data, CdlModeSpeed) == 0)
+      CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) == 0 ||
+      CdRead ((FONT_FILE_NUM_SECTORS), font_data, CdlModeSpeed) == 0)
   {
     exit (-1);
   }
@@ -71,6 +78,11 @@ load_font (void)
   DrawSync (0);
   LoadImage (font_img.prect, font_img.paddr);
   DrawSync (0);
+
+  texture_tpage_lookup[TEXTID_FONT_TEXTURE] = GetTPage (0, 0, (SW_FONT_TPAGE_X),
+                                                        (SW_FONT_TPAGE_Y));
+  texture_clut_lookup[TEXTID_FONT_TEXTURE] = GetClut ((SW_FONT_CLUT_X),
+                                                      (SW_FONT_CLUT_Y));
 }
 
 uint8_t
@@ -85,8 +97,9 @@ sw_print (const char *str, int16_t x, int16_t y)
   const char *cptr;
   uint8_t u8_sprt_idx;
 
-  u8_output = create_new_text_output ();
-  to = get_text_output (u8_output);
+  to = create_new_text_output ();
+  u8_output = to->u8_id;
+
   to->u8_length = strlen (str);
 #ifdef DEBUG_BUILD
   assert (to->u8_length < (SW_MAX_NUM_GLYPHS));
@@ -97,42 +110,43 @@ sw_print (const char *str, int16_t x, int16_t y)
   i16_top_left_y = y - FONT_SPRITE_HALF_HEIGHT;
 
   strncpy(to->zcs_msg, str, to->u8_length);
-  for (i = 0, cptr = str; cptr < str + to->u8_length; i++, cptr++,
-  i16_top_left_x += (FONT_SPRITE_WIDTH))
+  for (i = 0, cptr = str; (*cptr) != '\0'; cptr++, i16_top_left_x += (FONT_SPRITE_WIDTH))
   {
-    if (*cptr == ' ') continue;
-    u8_sprt_idx = calculate_glyph_idx (*cptr);
+    if (*cptr == ' ')
+    {
+      to->u8_length--;
+      continue;
+    }
 
-    SetSprt16(&to->glyphs[i]);
-    setXY0(&to->glyphs[i], i16_top_left_x, i16_top_left_y);
-    setRGB0(&to->glyphs[i], 0xFF, 0xFF, 0xFF);
-    to->glyphs[i].clut = FONT_CLUT_ID;
+    u8_sprt_idx = calculate_glyph_idx (*cptr);
 #ifdef DEBUG_BUILD
     assert(u8_sprt_idx < (SW_FONT_TEXTURE_HEIGHT));
 #endif /* DEBUG_BUILD */
+
+    setXY0(&to->glyphs[i], i16_top_left_x, i16_top_left_y);
     setUV0(&to->glyphs[i],
-           (u8_sprt_idx * (FONT_SPRITE_WIDTH) % (SW_FONT_TEXTURE_WIDTH)),
-           (u_char)(u8_sprt_idx / (SW_FONT_SPRITE_HEIGHT)) * (SW_FONT_SPRITE_HEIGHT)
-           );
+      (u8_sprt_idx * (FONT_SPRITE_WIDTH) % (SW_FONT_TEXTURE_WIDTH)),
+      (u_char)(u8_sprt_idx / (SW_FONT_SPRITE_HEIGHT)) * (SW_FONT_SPRITE_HEIGHT)
+    );
+    i++;
   }
 
   return u8_output;
 }
 
-uint8_t
+TextOutput_t *
 create_new_text_output (void)
 {
-  static uint8_t u8_num_outputs_created = 0; // count incl. deleted ones
-  const uint8_t u8_OUTPUT = u8_num_outputs_created;
+  static uint8_t u8_cnt = 0; // count incl. deleted ones
 
 #ifdef DEBUG_BUILD
   assert((sw_num_outputs + 1) < (SW_MAX_NUM_TEXT_OUTPUTS));
 #endif /* DEBUG_BUILD */
 
-  sw_output_pool[sw_num_outputs].u8_id = u8_OUTPUT;
+  sw_output_pool[sw_num_outputs].u8_id = u8_cnt;
   sw_num_outputs++;
-  u8_num_outputs_created++;
-  return u8_OUTPUT;
+  u8_cnt++;
+  return &sw_output_pool[sw_num_outputs - 1];
 }
 
 TextOutput_t *
@@ -174,7 +188,7 @@ calculate_glyph_idx (char c)
     return 52 + (c - '0');
   }
   else
-{
+  {
     switch (c)
     {
       case '.':
