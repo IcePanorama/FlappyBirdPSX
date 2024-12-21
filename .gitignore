@@ -9,6 +9,8 @@
 format.sh
 *.dev
 *.frk
+*.ISO
+*.iso
 
 # Prerequisites
 *.d
