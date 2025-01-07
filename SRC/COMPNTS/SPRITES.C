@@ -5,48 +5,55 @@
   #include <assert.h>
 #endif /* DEBUG_BUILD */
 
-SpriteCompnt_t sp_sprite_pool[SPRITES_MAX_NUM_SPRITES];// = {{0}};
-uint8_t sp_num_sprites = 0;
+SpritePool_t sprite_pools[(SPRITES_NUM_POOLS)];
 
 void
 sc_init_sprite_compnt_pool (void)
 {
-  uint8_t i;
+  uint8_t i, j;
 
-  memset (sp_sprite_pool, 0,
-          sizeof (SpriteCompnt_t) * SPRITES_MAX_NUM_SPRITES);
-  sp_num_sprites = 0;
+  memset (sprite_pools, 0, sizeof (SpritePool_t) * (SPRITES_NUM_POOLS));
 
-  for (i = 0; i < SPRITES_MAX_NUM_SPRITES; i++)
+//CLUT is incorrect for one of these?
+  sprite_pools[TEXTID_PIPE_BOT_TEXTURE].texture_id = TEXTID_PIPE_BOT_TEXTURE;
+  sprite_pools[TEXTID_TMP].texture_id = TEXTID_TMP;
+
+  for (i = 0; i < (SPRITES_NUM_POOLS); i++)
   {
-    SetPolyFT4 (&sp_sprite_pool[i].p4_sprite);
-    SetShadeTex (&sp_sprite_pool[i].p4_sprite, 1);
-    setRGB0(&sp_sprite_pool[i].p4_sprite, 0xFF, 0xFF, 0xFF);
+    sprite_pools[i].u8_num_sprites = 0;
+    for (j = 0; j < (SPRITES_MAX_NUM_SPRITES); j++)
+    {
+      SetSprt (&sprite_pools[i].sprites[j].sprite);
+      // FIXME: sprites look blown out?
+      setRGB0(&sprite_pools[i].sprites[j].sprite, 0xFF, 0xFF, 0xFF);
+      sprite_pools[i].sprites[j].sprite.clut =
+        texture_clut_lookup[sprite_pools[i].texture_id];
+    }
   }
 }
 
 SpriteCompnt_t *
-sc_create_new_sprite (uint8_t u8_id)
+sc_create_new_sprite (SpritePool_t *sp, uint8_t u8_id)
 {
 #ifdef DEBUG_BUILD
-  assert((sp_num_sprites + 1) < SPRITES_MAX_NUM_SPRITES);
+  assert((sp->u8_num_sprites + 1) < (SPRITES_MAX_NUM_SPRITES));
 #endif /* DEBUG_BUILD */
 
-  sp_sprite_pool[sp_num_sprites].u8_parent_id = u8_id;
-  sp_num_sprites++;
-  return &sp_sprite_pool[sp_num_sprites - 1];
+  sp->sprites[sp->u8_num_sprites].u8_parent_id = u8_id;
+  sp->u8_num_sprites++;
+  return &sp->sprites[sp->u8_num_sprites - 1];
 }
 
 void
-destroy_sprite (uint8_t u8_id)
+destroy_sprite (SpritePool_t *sp, uint8_t u8_id)
 {
   SpriteCompnt_t sc_tmp;
   uint8_t i;
   uint8_t u8_idx = -1;
 
-  for (i = 0; i < sp_num_sprites; i++)
+  for (i = 0; i < sp->u8_num_sprites; i++)
   {
-    if (sp_sprite_pool[i].u8_parent_id == u8_id)
+    if (sp->sprites[i].u8_parent_id == u8_id)
     {
       u8_idx = i;
       break;
@@ -54,30 +61,30 @@ destroy_sprite (uint8_t u8_id)
   }
 
 #ifdef DEBUG_BUILD
-  assert(u8_idx != (uint8_t)-1);
+  assert(u8_idx < sp->u8_num_sprites);
 #endif /* DEBUG_BUILD */
 
   /* if the given sprite is last active sprite, swapping isn't necessary. */
-  if (u8_idx != (sp_num_sprites - 1))
+  if (u8_idx != (sp->u8_num_sprites - 1))
   {
-    sc_tmp = sp_sprite_pool[u8_idx];
-    sp_sprite_pool[u8_idx] = sp_sprite_pool[sp_num_sprites - 1];
-    sp_sprite_pool[sp_num_sprites - 1] = sc_tmp;
+    sc_tmp = sp->sprites[u8_idx];
+    sp->sprites[u8_idx] = sp->sprites[sp->u8_num_sprites - 1];
+    sp->sprites[sp->u8_num_sprites - 1] = sc_tmp;
   }
 
-  sp_num_sprites--;
+  sp->u8_num_sprites--;
 }
 
 SpriteCompnt_t *
-get_sprite_with_id (uint8_t u8_id)
+get_sprite_with_id (SpritePool_t *sp, uint8_t u8_id)
 {
   uint8_t i;
 
-  for (i = 0; i < sp_num_sprites; i++)
+  for (i = 0; i < sp->u8_num_sprites; i++)
   {
-    if (sp_sprite_pool[i].u8_parent_id == u8_id)
+    if (sp->sprites[i].u8_parent_id == u8_id)
     {
-      return &sp_sprite_pool[i];
+      return &sp->sprites[i];
     }
   }
 

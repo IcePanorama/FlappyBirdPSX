@@ -12,6 +12,12 @@
 #define PIE_PIPE_WIDTH (32)
 #define PIE_HALF_PIPE_WIDTH ((PIE_PIPE_WIDTH) >> 1)
 
+/**
+ *  Given a id (say for a sprite or physics compnt), returns whether or not that
+ *  id should be associated with a top or bottom pipe piece.
+ */
+#define PIE_IS_TOP_PIPE(id) ((id) % 2 != 0)
+
 typedef struct PipesEntity_s
 {
   uint8_t u8_eid;

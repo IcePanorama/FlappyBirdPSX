@@ -25,7 +25,6 @@ sb_init_screen_buffers (void)
                  SCREEN_HEIGHT);
 
   screen_buffers[0].draw_env.isbg = screen_buffers[1].draw_env.isbg = 1;
-  //todo: make black
-  setRGB0(&screen_buffers[0].draw_env, 100, 100, 100);
-  setRGB0(&screen_buffers[1].draw_env, 100, 100, 100);
+  setRGB0(&screen_buffers[0].draw_env, 0, 0, 0);
+  setRGB0(&screen_buffers[1].draw_env, 0, 0, 0);
 }

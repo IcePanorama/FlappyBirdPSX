@@ -11,6 +11,7 @@ format.sh
 *.frk
 *.ISO
 *.iso
+.releases/*
 
 # Prerequisites
 *.d

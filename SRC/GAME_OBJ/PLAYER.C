@@ -73,16 +73,16 @@ init_player_physics_compnt (PlayerEntity_t *pe, Vec2_t *v2_output_pos)
 void
 init_player_sprite_compnt (PlayerEntity_t *pe)
 {
-  pe->psc_sprite_compnt = sc_create_new_sprite (pe->u8_eid);
+  pe->psc_sprite_compnt = sc_create_new_sprite (&sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid);
+#ifdef DEBUG_BUILD
+  assert(pe->psc_sprite_compnt != 0);
+#endif /* DEBUG_BUILD */
 
   pe->psc_sprite_compnt->u8_width = pe->u8_width;
   pe->psc_sprite_compnt->u8_height = pe->u8_height;
 
-  pe->psc_sprite_compnt->p4_sprite.clut =
-    texture_clut_lookup[TEXTID_PIPE_BOT_TEXTURE];
-  pe->psc_sprite_compnt->p4_sprite.tpage =
-    texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE];
-//  setWH(&pe->psc_sprite_compnt->p4_sprite, pe->u8_width, pe->u8_height);
+  setWH(&pe->psc_sprite_compnt->sprite, pe->u8_width, pe->u8_height);
+  setUV0(&pe->psc_sprite_compnt->sprite, 0, 0);
 
   pe->psc_sprite_compnt->update = pe_update_player_sprite_xy;
 }
@@ -91,19 +91,13 @@ void
 pe_update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
 {
   Vec2_t v2_cs_pos;  // camera-space position
-  uint16_t u16_left_x;
-  uint16_t u16_top_y;
 
   if (sc == 0 || v2_pos == 0)
     return;
 
   v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
 
-  u16_left_x  = v2_cs_pos.x - (sc->u8_width >> 1);
-  u16_top_y   = v2_cs_pos.y - (sc->u8_height >> 1);
-
-  setXYWH(&sc->p4_sprite, u16_left_x, u16_top_y, sc->u8_width, sc->u8_height);
-  setUVWH(&sc->p4_sprite, 0, 0, sc->u8_width, sc->u8_height);
+  setXY0(&sc->sprite, v2_cs_pos.x - (sc->u8_width >> 1), v2_cs_pos.y - (sc->u8_height >> 1));
 }
 
 void
@@ -121,7 +115,7 @@ pe_destroy_player_entity (PlayerEntity_t *pe)
   if (pe == 0 || (pe->u8_flags & (1 << (FL_DESTROYED)))) return;
 
   csc_destroy_col_shape (pe->u8_eid);
-  destroy_sprite (pe->u8_eid);
+  destroy_sprite (&sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid);
   destroy_physics_compnt (pe->u8_eid);
 
   pe->u8_flags |= (1 << (FL_DESTROYED));

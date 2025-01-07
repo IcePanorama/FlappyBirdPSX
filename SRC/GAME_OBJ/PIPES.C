@@ -109,6 +109,8 @@ init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
   pe->ppc_physics_compnts[1] = 0;
 }
 
+#define PIPE_TEXTURE_HEIGHT (128)
+
 void
 init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2])
 {
@@ -116,36 +118,33 @@ init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2])
 
   for (i = 0; i < 2; i++)
   {
-    pe->psc_sprite_compnts[i] = sc_create_new_sprite (pe->u8_eid + i);
+    if (i == 1) // bottom
+    {
+      pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid + i);
 
 #ifdef DEBUG_BUILD
-    assert(pe->psc_sprite_compnts[i] != 0);
+      assert(pe->psc_sprite_compnts[i] != 0);
 #endif /* DEBUG_BUILD */
+      setUV0(&pe->psc_sprite_compnts[i]->sprite, 0, 0);
+    }
+    else // top
+    {
+      pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TEXTID_TMP], pe->u8_eid + i);
+
+#ifdef DEBUG_BUILD
+      assert(pe->psc_sprite_compnts[i] != 0);
+#endif /* DEBUG_BUILD */
+      setUV0(&pe->psc_sprite_compnts[i]->sprite, 0, (PIPE_TEXTURE_HEIGHT) - u16_heights[i]);
+    }
 
     pe->psc_sprite_compnts[i]->u8_width = (PIE_PIPE_WIDTH);
     pe->psc_sprite_compnts[i]->u8_height = u16_heights[i];
 
-/*
-    if (i == 1)
-    {
-*/
-      pe->psc_sprite_compnts[i]->p4_sprite.clut =
-        texture_clut_lookup[TEXTID_PIPE_BOT_TEXTURE];
-      pe->psc_sprite_compnts[i]->p4_sprite.tpage =
-        texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE];
-/*
-    }
-    else
-    {
-      pe->psc_sprite_compnts[i]->p4_sprite.clut = texture_clut_lookup[TEXTID_TMP];
-      pe->psc_sprite_compnts[i]->p4_sprite.tpage = texture_tpage_lookup[TEXTID_TMP];
-    }
-*/
+    setWH(&pe->psc_sprite_compnts[i]->sprite, (PIE_PIPE_WIDTH), u16_heights[i]);
+
     pe->psc_sprite_compnts[i]->update = pie_update_pipes_sprite_xy;
   }
 }
-
-//#define PIPE_TEXTURE_HEIGHT (128)
 
 void
 pie_update_pipes_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
@@ -162,16 +161,7 @@ pie_update_pipes_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
   u16_left_x  = v2_cs_pos.x - (PIE_HALF_PIPE_WIDTH);
   u16_top_y   = v2_cs_pos.y - (sc->u8_height >> 1);
 
-  setXYWH(&sc->p4_sprite, u16_left_x, u16_top_y, sc->u8_width, sc->u8_height);
-
-  //FIXME: off by one error in the else branch, need to test on real hardware.
-  if (sc->u8_parent_id % 2 == 0)
-    setUVWH(&sc->p4_sprite, 0, 0, sc->u8_width, sc->u8_height);
-  else
-    setUV4(&sc->p4_sprite,            0, sc->u8_height,
-                           sc->u8_width, sc->u8_height,
-                                      0,             0,
-                           sc->u8_width,             0);
+  setXY0(&sc->sprite, u16_left_x, u16_top_y);
 }
 
 void
@@ -181,7 +171,7 @@ pie_destroy_pipes_entity (PipesEntity_t *pe)
   for (i = 0; i < 2; i++)
   {
     csc_destroy_col_shape (pe->u8_eid + i);
-    destroy_sprite (pe->u8_eid + i);
+    destroy_sprite (i == 0 ? &sprite_pools[TEXTID_TMP] : &sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid + i);
     destroy_physics_compnt (pe->u8_eid + i);
   }
 }

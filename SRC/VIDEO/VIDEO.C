@@ -11,6 +11,7 @@
 #include "compnts/wiframe.h"
 #include "game/gamemngr.h"
 #include "game/scrwritr.h"
+#include "game_obj/entityid.h"
 #include "game_obj/pipes.h"
 #include "sys/fb_ints.h"
 #include "sys/fb_defs.h"
@@ -29,9 +30,13 @@
 #define DIST_TO_SCREEN (512)
 
 static void draw_sprites (u_long *ot, u_long *ot_idx);
+static void draw_player_sprite (u_long *ot, u_long *ot_idx);
 static void dump_font_img (u_long *ot, u_long *ot_idx);
 static void draw_text_output (u_long *ot, u_long *ot_idx);
 static void load_textures (void);
+
+static DR_TPAGE tpages[TEXTID_NUM_TEXTURES] = {{0}};
+static DR_TPAGE player_tpage = {0};
 
 void
 v_init_video (void)
@@ -40,21 +45,21 @@ v_init_video (void)
   SetVideoMode (0);
   GsInitGraph (SCREEN_WIDTH, SCREEN_HEIGHT, GsNONINTER|GsOFSGPU, 1, 0);
 
-	FntLoad (960, 256);
-	SetDumpFnt (FntOpen (0, 8, SCREEN_WIDTH, 64, 0, 512));
+  FntLoad (960, 256);
+  SetDumpFnt (FntOpen (0, 8, SCREEN_WIDTH, 64, 0, 512));
 
-	SetGraphDebug (0);
+  SetGraphDebug (0);
 
-	InitGeom ();  // Init GTE
-	SetGeomOffset (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-	SetGeomScreen (DIST_TO_SCREEN);
+  InitGeom ();  // Init GTE
+  SetGeomOffset (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+  SetGeomScreen (DIST_TO_SCREEN);
 
   sb_init_screen_buffers ();
 
   sw_init ();
   load_textures ();
 
-	SetDispMask (1);
+  SetDispMask (1);
 }
 
 /** TODO: dynamically load/position textures into vram */
@@ -95,9 +100,14 @@ load_textures (void)
 
   texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE] = GetTPage (0, 0, 320, 256);
   texture_clut_lookup[TEXTID_PIPE_BOT_TEXTURE] = GetClut (0, 481);
+  SetDrawTPage(&tpages[TEXTID_PIPE_BOT_TEXTURE], 0, 0, texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE]);
+
   texture_tpage_lookup[TEXTID_TMP] = GetTPage (0, 0, 320+64, 256);
   texture_clut_lookup[TEXTID_TMP] = GetClut (0, 482);
+  SetDrawTPage(&tpages[TEXTID_TMP], 0, 0, texture_tpage_lookup[TEXTID_TMP]);
 
+  // FIXME: remove this once the player has their own sprite
+  SetDrawTPage(&player_tpage, 0, 0, texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE]);
 }
 
 void
@@ -111,13 +121,10 @@ v_render_screen (void)
 
   draw_sprites (curr_sb->ordering_table, &ot_idx);
 
-  /* Draw player sprite on top. This assumes player is always sprite 0. */
-#ifdef DEBUG_BUILD
-  assert(ot_idx < (OT_MAX_LEN));
-#endif /* DEBUG_BUILD */
-  AddPrim (&curr_sb->ordering_table[ot_idx], &sp_sprite_pool[0].p4_sprite);
-  ot_idx++;
+  /* Handling player separately so that they're always on top. */
+  draw_player_sprite (curr_sb->ordering_table, &ot_idx);
 
+  //FIXME: make this a macro function to get rid of the compiler warning.
   if (FALSE) dump_font_img (curr_sb->ordering_table, &ot_idx);
 
   draw_text_output (curr_sb->ordering_table, &ot_idx);
@@ -128,7 +135,7 @@ v_render_screen (void)
   PutDrawEnv (&curr_sb->draw_env);
   PutDispEnv (&curr_sb->disp_env);
 
-  ClearImage (&curr_sb->draw_env.clip, 100, 100, 100);
+  ClearImage (&curr_sb->draw_env.clip, 0, 0, 0);
 
 //  DumpOTag (curr_sb->ordering_table);
   DrawOTag (curr_sb->ordering_table);
@@ -140,16 +147,50 @@ void
 draw_sprites (u_long *ot, u_long *ot_idx)
 {
   uint8_t i;
+  uint8_t j;
 
-  for (i = 1; i < sp_num_sprites; i++)
+  for (i = 0; i < TEXTID_NUM_TEXTURES; i++)
   {
+    /* Skip unused sprites. */
+    if (sprite_pools[i].u8_num_sprites == 0) continue;
+
 #ifdef DEBUG_BUILD
     assert((*ot_idx) < (OT_MAX_LEN));
 #endif /* DEBUG_BUILD */
-
-    AddPrim (&ot[(*ot_idx)], &sp_sprite_pool[i].p4_sprite);
+    AddPrim(&ot[(*ot_idx)], &tpages[sprite_pools[i].texture_id]);
     (*ot_idx)++;
+
+    for (j = 0; j < sprite_pools[i].u8_num_sprites; j++)
+    {
+      /* Player sprite is handled separately. */
+      if (sprite_pools[i].sprites[j].u8_parent_id == EID_PLAYER_ID)
+        continue;
+
+#ifdef DEBUG_BUILD
+      assert((*ot_idx) < (OT_MAX_LEN));
+#endif /* DEBUG_BUILD */
+      AddPrim(&ot[(*ot_idx)], &sprite_pools[sprite_pools[i].texture_id].sprites[j].sprite);
+      (*ot_idx)++;
+    }
   }
+}
+
+void
+draw_player_sprite (u_long *ot, u_long *ot_idx)
+{
+  /* Draw player sprite on top. This assumes player is always sprite 0. */
+#ifdef DEBUG_BUILD
+  assert((*ot_idx) < (OT_MAX_LEN));
+#endif /* DEBUG_BUILD */
+  AddPrim(&ot[(*ot_idx)], &player_tpage);
+  (*ot_idx)++;
+
+#ifdef DEBUG_BUILD
+  assert((*ot_idx) < (OT_MAX_LEN));
+#endif /* DEBUG_BUILD */
+  AddPrim (&ot[(*ot_idx)],
+           &sprite_pools[(TEXTID_PIPE_BOT_TEXTURE)].sprites[0].sprite);
+  (*ot_idx)++;
 }
 
 void
