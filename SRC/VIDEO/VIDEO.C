@@ -34,6 +34,7 @@ static void draw_player_sprite (u_long *ot, u_long *ot_idx);
 static void dump_font_img (u_long *ot, u_long *ot_idx);
 static void draw_text_output (u_long *ot, u_long *ot_idx);
 static void load_textures (void);
+static void new_load_textures (void);
 
 static DR_TPAGE tpages[TEXTID_NUM_TEXTURES] = {{0}};
 static DR_TPAGE player_tpage = {0};
@@ -58,6 +59,7 @@ v_init_video (void)
 
   sw_init ();
   load_textures ();
+  new_load_textures ();
 
   SetDispMask (1);
 }
@@ -71,6 +73,7 @@ load_textures (void)
   TIM_IMAGE sprite_img;
 
   assert(CdSearchFile (&fptr, "\\ASSETS\\SPRITES\\PIPE.TIM;1") != 0);
+  assert(fptr.size <= (2 << 11));
   assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
   assert(CdRead ((2), sprite_data, CdlModeSpeed) != 0);
   CdReadSync(0, 0); // wait for operation to finish.
@@ -108,6 +111,35 @@ load_textures (void)
 
   // FIXME: remove this once the player has their own sprite
   SetDrawTPage(&player_tpage, 0, 0, texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE]);
+}
+
+//TODO: finish loading from disc.
+#define PIPES_NUM_SECTORS (10)
+#define PIPES_SIZE_BYTES ((PIPES_NUM_SECTORS) << 11)
+
+void
+new_load_textures (void)
+{
+  CdlFILE fptr;
+  u_long sprite_data[(PIPES_SIZE_BYTES)] = {0};
+//  TIM_IMAGE sprite_img;
+
+  assert(CdSearchFile (&fptr, "\\ASSETS\\PIPES.DAT;1") != 0);
+  assert(fptr.size <= (PIPES_SIZE_BYTES));
+  assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
+  assert(CdRead ((PIPES_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
+  CdReadSync(0, 0); // wait for operation to finish.
+
+  printf("%02X\n", (uint8_t)(sprite_data[0] & 0xFF));
+
+/*
+  assert(OpenTIM (sprite_data) == 0);
+  assert(ReadTIM (&sprite_img) != 0);
+  LoadImage (sprite_img.crect, sprite_img.caddr);
+  DrawSync (0);
+  LoadImage (sprite_img.prect, sprite_img.paddr);
+  DrawSync (0);
+*/
 }
 
 void
