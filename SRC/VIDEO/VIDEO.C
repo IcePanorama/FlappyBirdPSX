@@ -35,6 +35,7 @@ static void dump_font_img (u_long *ot, u_long *ot_idx);
 static void draw_text_output (u_long *ot, u_long *ot_idx);
 static void load_textures (void);
 static void new_load_textures (void);
+static void clear_vram (void);
 
 static DR_TPAGE tpages[TEXTID_NUM_TEXTURES] = {{0}};
 static DR_TPAGE player_tpage = {0};
@@ -57,11 +58,27 @@ v_init_video (void)
 
   sb_init_screen_buffers ();
 
+  clear_vram ();
+
+  new_load_textures ();
   sw_init ();
   load_textures ();
-  new_load_textures ();
 
   SetDispMask (1);
+}
+
+/**
+ *  Not strictly necessary, but this should prevent any odd bugs from whatever
+ *  random garbage is there in the future.
+ */
+void
+clear_vram (void)
+{
+  RECT r;
+  r.x = r.y = 0;
+  r.w = 1024;
+  r.h = 512;
+  ClearImage(&r, 0, 0, 0);
 }
 
 /** TODO: dynamically load/position textures into vram */
@@ -113,7 +130,13 @@ load_textures (void)
   SetDrawTPage(&player_tpage, 0, 0, texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE]);
 }
 
-//TODO: finish loading from disc.
+/**
+ *  TODO for next time:
+ *    Alignment issues have been fixed. Need to create a texture manager of some
+ *    sort which can handle loading everything into memory where ever it'd like
+ *    it. Doing so will also give us an opportunity to clean up this hideous
+ *    code lol
+ */
 #define PIPES_NUM_SECTORS (10)
 #define PIPES_SIZE_BYTES ((PIPES_NUM_SECTORS) << 11)
 
@@ -122,24 +145,55 @@ new_load_textures (void)
 {
   CdlFILE fptr;
   u_long sprite_data[(PIPES_SIZE_BYTES)] = {0};
-//  TIM_IMAGE sprite_img;
+  u_long *clut;
+  u_short *work;
+  u_short offset;
+  RECT rect;
 
-  assert(CdSearchFile (&fptr, "\\ASSETS\\PIPES.DAT;1") != 0);
+  assert(CdSearchFile (&fptr, "\\ASSETS\\FONT.DAT;1") != 0);
   assert(fptr.size <= (PIPES_SIZE_BYTES));
   assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
   assert(CdRead ((PIPES_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
   CdReadSync(0, 0); // wait for operation to finish.
 
-  printf("%02X\n", (uint8_t)(sprite_data[0] & 0xFF));
+  work = (u_short *)(&sprite_data[0]);
+  printf("Num entries: %d\n", *work);
+  work++;
+  printf("Entry id: %d\n", *work);
+  work++;
+  printf("Clut width: %d\n", *work);
+  work++;
+  printf("Clut height: %d\n", *work);
+  work++;
 
-/*
-  assert(OpenTIM (sprite_data) == 0);
-  assert(ReadTIM (&sprite_img) != 0);
-  LoadImage (sprite_img.crect, sprite_img.caddr);
+  offset = (char *)(work) - (char *)(&sprite_data[0]);
+  work += (4 - (offset % 4)) % 4;
+
+  clut = (u_long *)work;
+  LoadClut2(clut, 1008, 511);
   DrawSync (0);
-  LoadImage (sprite_img.prect, sprite_img.paddr);
+  work += 16; // skip over clut
+
+  printf("Entry id: %d\n", *work);
+  work++;
+  printf("Img width: %d\n", *work);
+  rect.w = *work;
+  work++;
+  printf("Img height: %d\n", *work);
+  rect.h = *work;
+  work++;
+
+  rect.x = 960;
+  rect.y = 0;
+
+  offset = (char *)(work) - (char *)(&sprite_data[0]);
+  work += (4 - (offset % 4)) % 4;
+  LoadImage(&rect, (u_long *)work);
   DrawSync (0);
-*/
+
+  texture_tpage_lookup[TEXTID_FONT_TEXTURE] = GetTPage (0, 0, 960, 0);
+  texture_clut_lookup[TEXTID_FONT_TEXTURE] = GetClut (1008, 511);
+  SetDrawTPage(&tpages[TEXTID_FONT_TEXTURE], 0, 0, texture_tpage_lookup[TEXTID_FONT_TEXTURE]);
 }
 
 void
@@ -157,7 +211,7 @@ v_render_screen (void)
   draw_player_sprite (curr_sb->ordering_table, &ot_idx);
 
   //FIXME: make this a macro function to get rid of the compiler warning.
-  if (FALSE) dump_font_img (curr_sb->ordering_table, &ot_idx);
+  if (FALSE)  dump_font_img (curr_sb->ordering_table, &ot_idx);
 
   draw_text_output (curr_sb->ordering_table, &ot_idx);
 
@@ -240,9 +294,9 @@ dump_font_img (u_long *ot, u_long *ot_idx)
                 (SW_FONT_TEXTURE_WIDTH) + 10, (SW_FONT_TEXTURE_HEIGHT) + 50
   );
   setUV4(&test,                           0, 0,
-                (SW_FONT_TEXTURE_WIDTH) - 1, 0,
-                                          0, (SW_FONT_TEXTURE_HEIGHT) - 1,
-                (SW_FONT_TEXTURE_WIDTH) - 1, (SW_FONT_TEXTURE_HEIGHT) - 1);
+                255, 0,
+                                          0, 63,
+                255, 63);
 
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (OT_MAX_LEN));

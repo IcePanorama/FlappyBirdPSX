@@ -40,9 +40,9 @@ Disc XA_PSX
               XAFileAttributes	Form1	Data
               Source	c:\psyq\projects\flppybir\assets\font.tim
             EndFile
-            File	PIPES.DAT;1
+            File	FONT.DAT;1
               XAFileAttributes	Form1	Data
-              Source	c:\psyq\projects\flppybir\assets\pipes.dat
+              Source	c:\psyq\projects\flppybir\assets\font.dat
             EndFile
             ; SPRITES===========================================================
             Directory	SPRITES

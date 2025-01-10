@@ -37,7 +37,7 @@ sw_init (void)
   memset (sw_output_pool, 0, sizeof (TextOutput_t) * (SW_MAX_NUM_TEXT_OUTPUTS));
   sw_num_outputs = 0;
 
-  load_font ();
+  if (FALSE) load_font ();
 
   for (i = 0; i < SW_MAX_NUM_TEXT_OUTPUTS; i++)
   {
