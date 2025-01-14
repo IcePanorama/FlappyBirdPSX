@@ -144,7 +144,7 @@ void
 update_sprites (Vec2_t *v2_input_pos)
 {
   /* Update player sprite */
-  (*sprite_pools[TEXTID_PIPE_BOT_TEXTURE].sprites[0].update)(&sprite_pools[TEXTID_PIPE_BOT_TEXTURE].sprites[0], &v2_input_pos[0]);
+  (*sprite_pools[TEXTID_PIPES_TEXTURE].sprites[0].update)(&sprite_pools[TEXTID_PIPES_TEXTURE].sprites[0], &v2_input_pos[0]);
 
   update_pipe_sprites(v2_input_pos);
 }
@@ -153,38 +153,12 @@ void
 update_pipe_sprites (Vec2_t *v2_input_pos)
 {
   uint8_t i;
-  uint8_t u8_top_pipe_idx = 0;
-  //FIXME: change to 0 once player has their own tpage
-  uint8_t u8_bot_pipe_idx = 1;
 
-  /**
-   *  In order to simplify the rendering process, sprites need to be sorted not
-   *  only by whether or not they're active, but also by what tpage they're
-   *  associated with. Physics components are NOT sorted by tpage, and doing so
-   *  likely wouldn't make much sense. This logic bridges the gap over this
-   *  discrepancy. `i = 1` to skip the player's physics component.
-   */
-  for (i = 1; i < u8_pc_num_physics; i++)
-  {
-    if (PIE_IS_TOP_PIPE(pc_physics_pool[i].u8_parent_id))
-    {
-#ifdef DEBUG_BUILD
-      assert(u8_top_pipe_idx < sprite_pools[TEXTID_TMP].u8_num_sprites);
-#endif /* DEBUG_BUILD */
-      (*sprite_pools[TEXTID_TMP].sprites[u8_top_pipe_idx].update)(
-        &sprite_pools[TEXTID_TMP].sprites[u8_top_pipe_idx], &v2_input_pos[i]);
-      u8_top_pipe_idx++;
-    }
-    else
-    {
-#ifdef DEBUG_BUILD
-      assert(u8_bot_pipe_idx < sprite_pools[TEXTID_PIPE_BOT_TEXTURE].u8_num_sprites);
-#endif /* DEBUG_BUILD */
-      (*sprite_pools[TEXTID_PIPE_BOT_TEXTURE].sprites[u8_bot_pipe_idx].update)(
-        &sprite_pools[TEXTID_PIPE_BOT_TEXTURE].sprites[u8_bot_pipe_idx], &v2_input_pos[i]);
-      u8_bot_pipe_idx++;
-    }
-  }
+   for (i = 1; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
+   {
+     (*sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].update)(
+       &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i], &v2_input_pos[i]);
+   }
 }
 
 void

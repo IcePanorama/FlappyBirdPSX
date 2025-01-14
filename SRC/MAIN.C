@@ -13,6 +13,7 @@
 
 static int init_cd (void);
 
+// TODO: make font a 1 bit texture.
 int
 main (void)
 {

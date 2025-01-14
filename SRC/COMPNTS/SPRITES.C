@@ -15,8 +15,7 @@ sc_init_sprite_compnt_pool (void)
   memset (sprite_pools, 0, sizeof (SpritePool_t) * (SPRITES_NUM_POOLS));
 
 //CLUT is incorrect for one of these?
-  sprite_pools[TEXTID_PIPE_BOT_TEXTURE].texture_id = TEXTID_PIPE_BOT_TEXTURE;
-  sprite_pools[TEXTID_TMP].texture_id = TEXTID_TMP;
+  sprite_pools[TEXTID_PIPES_TEXTURE].texture_id = TEXTID_PIPES_TEXTURE;
 
   for (i = 0; i < (SPRITES_NUM_POOLS); i++)
   {
@@ -24,8 +23,8 @@ sc_init_sprite_compnt_pool (void)
     for (j = 0; j < (SPRITES_MAX_NUM_SPRITES); j++)
     {
       SetSprt (&sprite_pools[i].sprites[j].sprite);
-      // FIXME: sprites look blown out?
       setRGB0(&sprite_pools[i].sprites[j].sprite, 0xFF, 0xFF, 0xFF);
+      setShadeTex(&sprite_pools[i].sprites[j].sprite, 1); // turn off shading
       sprite_pools[i].sprites[j].sprite.clut =
         texture_clut_lookup[sprite_pools[i].texture_id];
     }

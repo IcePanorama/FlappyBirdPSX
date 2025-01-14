@@ -73,7 +73,8 @@ init_player_physics_compnt (PlayerEntity_t *pe, Vec2_t *v2_output_pos)
 void
 init_player_sprite_compnt (PlayerEntity_t *pe)
 {
-  pe->psc_sprite_compnt = sc_create_new_sprite (&sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid);
+  pe->psc_sprite_compnt =
+    sc_create_new_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid);
 #ifdef DEBUG_BUILD
   assert(pe->psc_sprite_compnt != 0);
 #endif /* DEBUG_BUILD */
@@ -115,7 +116,7 @@ pe_destroy_player_entity (PlayerEntity_t *pe)
   if (pe == 0 || (pe->u8_flags & (1 << (FL_DESTROYED)))) return;
 
   csc_destroy_col_shape (pe->u8_eid);
-  destroy_sprite (&sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid);
+  destroy_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid);
   destroy_physics_compnt (pe->u8_eid);
 
   pe->u8_flags |= (1 << (FL_DESTROYED));

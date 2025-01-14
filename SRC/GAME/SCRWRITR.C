@@ -22,7 +22,6 @@
 TextOutput_t sw_output_pool[(SW_MAX_NUM_TEXT_OUTPUTS)] = {{0}};
 uint8_t sw_num_outputs = 0;
 
-static void load_font (void);
 static TextOutput_t *create_new_text_output (void);
 static TextOutput_t *get_text_output (uint8_t u8_id);
 // TODO: create macro version of this!
@@ -37,8 +36,6 @@ sw_init (void)
   memset (sw_output_pool, 0, sizeof (TextOutput_t) * (SW_MAX_NUM_TEXT_OUTPUTS));
   sw_num_outputs = 0;
 
-  if (FALSE) load_font ();
-
   for (i = 0; i < SW_MAX_NUM_TEXT_OUTPUTS; i++)
   {
     for (j = 0; j < SW_MAX_NUM_GLYPHS; j++)
@@ -49,40 +46,6 @@ sw_init (void)
         texture_clut_lookup[TEXTID_FONT_TEXTURE];
     }
   }
-}
-
-void
-load_font (void)
-{
-  CdlFILE fptr;
-  u_long font_data[(FONT_FILE_DATA_SIZE)] = {0};
-  TIM_IMAGE font_img;
-
-#ifdef DEBUG_BUILD
-  assert(CdSearchFile (&fptr, "\\ASSETS\\FONT.TIM;1") != 0);
-  assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
-  assert(CdRead ((FONT_FILE_NUM_SECTORS), font_data, CdlModeSpeed) != 0);
-#else /* DEBUG_BUILD */
-  if (CdInit() == 0 || CdSearchFile (&fptr, "\\ASSETS\\FONT.TIM;1") == 0 ||
-      CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) == 0 ||
-      CdRead ((FONT_FILE_NUM_SECTORS), font_data, CdlModeSpeed) == 0)
-  {
-    exit (-1);
-  }
-#endif /* DEBUG_BUILD */
-  CdReadSync(0, 0); // wait for operation to finish.
-
-  assert(OpenTIM (font_data) == 0);
-  assert(ReadTIM (&font_img) != 0);
-  LoadImage (font_img.crect, font_img.caddr);
-  DrawSync (0);
-  LoadImage (font_img.prect, font_img.paddr);
-  DrawSync (0);
-
-  texture_tpage_lookup[TEXTID_FONT_TEXTURE] = GetTPage (0, 0, (SW_FONT_TPAGE_X),
-                                                        (SW_FONT_TPAGE_Y));
-  texture_clut_lookup[TEXTID_FONT_TEXTURE] = GetClut ((SW_FONT_CLUT_X),
-                                                      (SW_FONT_CLUT_Y));
 }
 
 uint8_t

@@ -24,7 +24,8 @@
 
 static void init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
                                         uint16_t u16_heights[2]);
-static void init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2]);
+static void init_pipes_sprite_compnts (PipesEntity_t *pe,
+                                       uint16_t u16_heights[2]);
 
 PipesEntity_t
 pie_create_pipes_entity (void)
@@ -118,24 +119,16 @@ init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2])
 
   for (i = 0; i < 2; i++)
   {
-    if (i == 1) // bottom
-    {
-      pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid + i);
-
+    pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid + i);
 #ifdef DEBUG_BUILD
-      assert(pe->psc_sprite_compnts[i] != 0);
+    assert(pe->psc_sprite_compnts[i] != 0);
 #endif /* DEBUG_BUILD */
-      setUV0(&pe->psc_sprite_compnts[i]->sprite, 0, 0);
-    }
-    else // top
-    {
-      pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TEXTID_TMP], pe->u8_eid + i);
 
-#ifdef DEBUG_BUILD
-      assert(pe->psc_sprite_compnts[i] != 0);
-#endif /* DEBUG_BUILD */
-      setUV0(&pe->psc_sprite_compnts[i]->sprite, 0, (PIPE_TEXTURE_HEIGHT) - u16_heights[i]);
-    }
+    if (i == 1)  // bot
+      setUV0(&pe->psc_sprite_compnts[i]->sprite, (PIE_PIPE_WIDTH), 0);
+    else  // top
+      setUV0(&pe->psc_sprite_compnts[i]->sprite, 0,
+             (PIPE_TEXTURE_HEIGHT) - u16_heights[i]);
 
     pe->psc_sprite_compnts[i]->u8_width = (PIE_PIPE_WIDTH);
     pe->psc_sprite_compnts[i]->u8_height = u16_heights[i];
@@ -171,7 +164,7 @@ pie_destroy_pipes_entity (PipesEntity_t *pe)
   for (i = 0; i < 2; i++)
   {
     csc_destroy_col_shape (pe->u8_eid + i);
-    destroy_sprite (i == 0 ? &sprite_pools[TEXTID_TMP] : &sprite_pools[TEXTID_PIPE_BOT_TEXTURE], pe->u8_eid + i);
+    destroy_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid + i);
     destroy_physics_compnt (pe->u8_eid + i);
   }
 }

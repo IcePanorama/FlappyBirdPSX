@@ -17,6 +17,7 @@
 #include "sys/fb_defs.h"
 #include "video/scrbuff.h"
 #include "video/textlkup.h"
+#include "video/textmngr.h"
 
 #ifdef DEBUG_BUILD
   #include <assert.h>
@@ -33,12 +34,7 @@ static void draw_sprites (u_long *ot, u_long *ot_idx);
 static void draw_player_sprite (u_long *ot, u_long *ot_idx);
 static void dump_font_img (u_long *ot, u_long *ot_idx);
 static void draw_text_output (u_long *ot, u_long *ot_idx);
-static void load_textures (void);
-static void new_load_textures (void);
 static void clear_vram (void);
-
-static DR_TPAGE tpages[TEXTID_NUM_TEXTURES] = {{0}};
-static DR_TPAGE player_tpage = {0};
 
 void
 v_init_video (void)
@@ -60,9 +56,11 @@ v_init_video (void)
 
   clear_vram ();
 
-  new_load_textures ();
+  tmg_auto_load_textures ();
+  SetDrawTPage(&player_tpage, 0, 0,
+               texture_tpage_lookup[TEXTID_PIPES_TEXTURE]);
+
   sw_init ();
-  load_textures ();
 
   SetDispMask (1);
 }
@@ -79,121 +77,6 @@ clear_vram (void)
   r.w = 1024;
   r.h = 512;
   ClearImage(&r, 0, 0, 0);
-}
-
-/** TODO: dynamically load/position textures into vram */
-void
-load_textures (void)
-{
-  CdlFILE fptr;
-  u_long sprite_data[((2) << 11)] = {0};
-  TIM_IMAGE sprite_img;
-
-  assert(CdSearchFile (&fptr, "\\ASSETS\\SPRITES\\PIPE.TIM;1") != 0);
-  assert(fptr.size <= (2 << 11));
-  assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
-  assert(CdRead ((2), sprite_data, CdlModeSpeed) != 0);
-  CdReadSync(0, 0); // wait for operation to finish.
-
-  assert(OpenTIM (sprite_data) == 0);
-  assert(ReadTIM (&sprite_img) != 0);
-  LoadImage (sprite_img.crect, sprite_img.caddr);
-  DrawSync (0);
-  LoadImage (sprite_img.prect, sprite_img.paddr);
-  DrawSync (0);
-
-  assert(CdSearchFile (&fptr, "\\ASSETS\\SPRITES\\TOP_PIPE.TIM;1") != 0);
-  assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
-  assert(CdRead ((2), sprite_data, CdlModeSpeed) != 0);
-  CdReadSync(0, 0); // wait for operation to finish.
-
-  assert(OpenTIM (sprite_data) == 0);
-  assert(ReadTIM (&sprite_img) != 0);
-  sprite_img.crect->x = 0;
-  sprite_img.crect->y = 482;
-  LoadImage (sprite_img.crect, sprite_img.caddr);
-  DrawSync (0);
-  sprite_img.prect->x = 320+64;
-  sprite_img.prect->y = 256;
-  LoadImage (sprite_img.prect, sprite_img.paddr);
-  DrawSync (0);
-
-  texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE] = GetTPage (0, 0, 320, 256);
-  texture_clut_lookup[TEXTID_PIPE_BOT_TEXTURE] = GetClut (0, 481);
-  SetDrawTPage(&tpages[TEXTID_PIPE_BOT_TEXTURE], 0, 0, texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE]);
-
-  texture_tpage_lookup[TEXTID_TMP] = GetTPage (0, 0, 320+64, 256);
-  texture_clut_lookup[TEXTID_TMP] = GetClut (0, 482);
-  SetDrawTPage(&tpages[TEXTID_TMP], 0, 0, texture_tpage_lookup[TEXTID_TMP]);
-
-  // FIXME: remove this once the player has their own sprite
-  SetDrawTPage(&player_tpage, 0, 0, texture_tpage_lookup[TEXTID_PIPE_BOT_TEXTURE]);
-}
-
-/**
- *  TODO for next time:
- *    Alignment issues have been fixed. Need to create a texture manager of some
- *    sort which can handle loading everything into memory where ever it'd like
- *    it. Doing so will also give us an opportunity to clean up this hideous
- *    code lol
- */
-#define PIPES_NUM_SECTORS (10)
-#define PIPES_SIZE_BYTES ((PIPES_NUM_SECTORS) << 11)
-
-void
-new_load_textures (void)
-{
-  CdlFILE fptr;
-  u_long sprite_data[(PIPES_SIZE_BYTES)] = {0};
-  u_long *clut;
-  u_short *work;
-  u_short offset;
-  RECT rect;
-
-  assert(CdSearchFile (&fptr, "\\ASSETS\\FONT.DAT;1") != 0);
-  assert(fptr.size <= (PIPES_SIZE_BYTES));
-  assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
-  assert(CdRead ((PIPES_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
-  CdReadSync(0, 0); // wait for operation to finish.
-
-  work = (u_short *)(&sprite_data[0]);
-  printf("Num entries: %d\n", *work);
-  work++;
-  printf("Entry id: %d\n", *work);
-  work++;
-  printf("Clut width: %d\n", *work);
-  work++;
-  printf("Clut height: %d\n", *work);
-  work++;
-
-  offset = (char *)(work) - (char *)(&sprite_data[0]);
-  work += (4 - (offset % 4)) % 4;
-
-  clut = (u_long *)work;
-  LoadClut2(clut, 1008, 511);
-  DrawSync (0);
-  work += 16; // skip over clut
-
-  printf("Entry id: %d\n", *work);
-  work++;
-  printf("Img width: %d\n", *work);
-  rect.w = *work;
-  work++;
-  printf("Img height: %d\n", *work);
-  rect.h = *work;
-  work++;
-
-  rect.x = 960;
-  rect.y = 0;
-
-  offset = (char *)(work) - (char *)(&sprite_data[0]);
-  work += (4 - (offset % 4)) % 4;
-  LoadImage(&rect, (u_long *)work);
-  DrawSync (0);
-
-  texture_tpage_lookup[TEXTID_FONT_TEXTURE] = GetTPage (0, 0, 960, 0);
-  texture_clut_lookup[TEXTID_FONT_TEXTURE] = GetClut (1008, 511);
-  SetDrawTPage(&tpages[TEXTID_FONT_TEXTURE], 0, 0, texture_tpage_lookup[TEXTID_FONT_TEXTURE]);
 }
 
 void
@@ -275,7 +158,7 @@ draw_player_sprite (u_long *ot, u_long *ot_idx)
   assert((*ot_idx) < (OT_MAX_LEN));
 #endif /* DEBUG_BUILD */
   AddPrim (&ot[(*ot_idx)],
-           &sprite_pools[(TEXTID_PIPE_BOT_TEXTURE)].sprites[0].sprite);
+           &sprite_pools[(TEXTID_PIPES_TEXTURE)].sprites[0].sprite);
   (*ot_idx)++;
 }
 
