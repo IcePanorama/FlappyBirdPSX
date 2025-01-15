@@ -44,18 +44,10 @@ Disc XA_PSX
               XAFileAttributes	Form1	Data
               Source	c:\psyq\projects\flppybir\assets\pipes.dat
             EndFile
-            ; SPRITES===========================================================
-            Directory	SPRITES
-              File	PIPE.TIM;1
-                XAFileAttributes	Form1	Data
-                Source	c:\psyq\projects\flppybir\assets\sprites\pipe.tim
-              EndFile
-              File	TOP_PIPE.TIM;1
-                XAFileAttributes	Form1	Data
-                Source	c:\psyq\projects\flppybir\assets\sprites\top_pipe.tim
-              EndFile
-            EndDirectory
-            ; ==================================================================
+            File	SPRITES.DAT;1
+              XAFileAttributes	Form1	Data
+              Source	c:\psyq\projects\flppybir\assets\sprites.dat
+            EndFile
           EndDirectory
           ; ====================================================================
         EndHierarchy

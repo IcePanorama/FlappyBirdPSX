@@ -17,8 +17,8 @@
 #define TPAGE_STARTING_Y_VALUE (0)
 
 //TODO: rename.
-#define PIPES_NUM_SECTORS (10)
-#define PIPES_SIZE_BYTES ((PIPES_NUM_SECTORS) << 11)
+#define SPRITES_NUM_SECTORS (20)
+#define SPRITES_SIZE_BYTES ((SPRITES_NUM_SECTORS) << 11)
 
 /**
  *  Aligns a `ptr` to the nearest byte, relative to `start`. Params should be
@@ -57,6 +57,7 @@ static void process_pixel_data (char *data_start, u_short **data_ptr,
 void
 tmg_auto_load_textures (void)
 {
+  load_texture("\\ASSETS\\SPRITES.DAT;1");
   load_texture("\\ASSETS\\FONT.DAT;1");
   load_texture("\\ASSETS\\PIPES.DAT;1");
 }
@@ -65,7 +66,7 @@ void
 load_texture (const char *path)
 {
   CdlFILE fptr;
-  u_long sprite_data[(PIPES_SIZE_BYTES)] = {0};
+  u_long sprite_data[(SPRITES_SIZE_BYTES)] = {0};
   u_short *work;
   uint16_t i;
   uint8_t u8_type;
@@ -77,9 +78,9 @@ load_texture (const char *path)
    *  actually search for it on boot.
    */
   assert(CdSearchFile (&fptr, (char *)path) != 0);
-  assert(fptr.size <= (PIPES_SIZE_BYTES));
+  assert(fptr.size <= (SPRITES_SIZE_BYTES));
   assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
-  assert(CdRead ((PIPES_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
+  assert(CdRead ((SPRITES_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
   CdReadSync(0, 0); // wait for operation to finish.
 
   work = (u_short *)(&sprite_data[0]);
@@ -89,6 +90,10 @@ load_texture (const char *path)
   {
     u8_entry_id = (*work) & 0xFF;
 
+    printf("%d\n", u8_entry_id);
+    printf("%04X\n", *work);
+    printf("%d\n",TEXTID_NUM_TEXTURES);
+    printf("%d\n", (char *)work - (char *)(&sprite_data[0]));
 #ifdef DEBUG_BUILD
     assert(u8_entry_id < TEXTID_NUM_TEXTURES);
 #endif /* DEBUG_BUILD */
@@ -159,4 +164,6 @@ process_pixel_data (char *data_start, u_short **data_ptr, TextureID_t tid)
 
   texture_tpage_lookup[tid] = GetTPage (0, 0, rect.x, rect.y);
   SetDrawTPage (&tpages[tid], 0, 0, texture_tpage_lookup[tid]);
+  //FIXME: issue is coming from here, I believe.
+  (*data_ptr) += (rect.w * rect.h);
 }
