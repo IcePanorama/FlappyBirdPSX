@@ -62,7 +62,7 @@ cm_handle_collisions (void)
 bool_t
 x_pos_in_red_zone (int16_t x)
 {
-  const int16_t i16_RED_ZONE_X = ((player->u8_width >> 1) + (PIE_HALF_PIPE_WIDTH)) << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+  const int16_t i16_RED_ZONE_X = ((player->u8_width >> 1) + (PIE_HALF_PIPE_WIDTH)) << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   return -i16_RED_ZONE_X < x && x < i16_RED_ZONE_X;
 }

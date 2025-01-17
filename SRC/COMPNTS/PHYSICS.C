@@ -13,12 +13,12 @@
 /** For position-related signals. */
 #define BUFFER_ZONE_SIZE (64) // No sprite should be larger than 64x64.
 #define BELOW_SCREEN_Y \
-  (((HALF_SCREEN_HEIGHT) + (BUFFER_ZONE_SIZE)) \
-  << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+  ((((FB_HALF_SCREEN_HEIGHT)) + (BUFFER_ZONE_SIZE)) \
+  << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
 #define ABOVE_SCREEN_Y (-(BELOW_SCREEN_Y))
 #define OFF_SCREEN_RIGHT \
-  (((HALF_SCREEN_WIDTH) + (BUFFER_ZONE_SIZE)) \
-  << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+  ((((FB_HALF_SCREEN_WIDTH)) + (BUFFER_ZONE_SIZE)) \
+  << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
 #define OFF_SCREEN_LEFT (-(OFF_SCREEN_RIGHT))
 /**********************************/
 
@@ -108,7 +108,7 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
   if (pc->b_use_gravity)
   {
     if (pc->v2_velocity.y > 0)
-       pc->v2_velocity.y -= (1 << WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+       pc->v2_velocity.y -= (1 << FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
     else
       pc->v2_velocity.y -= (GRAVITY);
   }

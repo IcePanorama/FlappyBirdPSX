@@ -6,7 +6,7 @@
 #include <libetc.h>
 /******************/
 
-#include "video/video.h"
+#include "video/renderer.h"
 #include "compnts/sprites.h"
 #include "compnts/wiframe.h"
 #include "game/gamemngr.h"
@@ -15,6 +15,7 @@
 #include "game_obj/pipes.h"
 #include "sys/fb_ints.h"
 #include "sys/fb_defs.h"
+#include "video/backgrnd.h"
 #include "video/scrbuff.h"
 #include "video/textlkup.h"
 #include "video/textmngr.h"
@@ -37,19 +38,19 @@ static void draw_text_output (u_long *ot, u_long *ot_idx);
 static void clear_vram (void);
 
 void
-v_init_video (void)
+r_init_renderer (void)
 {
   //TODO: figure out how to handle NTSC/PAL differences elegantly
   SetVideoMode (0);
-  GsInitGraph (SCREEN_WIDTH, SCREEN_HEIGHT, GsNONINTER|GsOFSGPU, 1, 0);
+  GsInitGraph ((FB_SCREEN_WIDTH), (FB_SCREEN_HEIGHT), GsNONINTER|GsOFSGPU, 1, 0);
 
   FntLoad (960, 256);
-  SetDumpFnt (FntOpen (0, 8, SCREEN_WIDTH, 64, 0, 512));
+  SetDumpFnt (FntOpen (0, 8, (FB_SCREEN_WIDTH), 64, 0, 512));
 
   SetGraphDebug (0);
 
   InitGeom ();  // Init GTE
-  SetGeomOffset (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+  SetGeomOffset ((FB_SCREEN_WIDTH) / 2, (FB_SCREEN_HEIGHT) / 2);
   SetGeomScreen (DIST_TO_SCREEN);
 
   sb_init_screen_buffers ();
@@ -59,7 +60,7 @@ v_init_video (void)
   tmg_auto_load_textures ();
   SetDrawTPage(&player_tpage, 0, 0,
                texture_tpage_lookup[TEXTID_PIPES_TEXTURE]);
-
+  bg_init_background();
   sw_init ();
 
   SetDispMask (1);
@@ -80,7 +81,7 @@ clear_vram (void)
 }
 
 void
-v_render_screen (void)
+r_render_screen (void)
 {
   u_long ot_idx = 0;
   static ScreenBuffer_t *curr_sb = screen_buffers;
@@ -88,7 +89,10 @@ v_render_screen (void)
 
   ClearOTag (curr_sb->ordering_table, OT_MAX_LEN);
 
+  bg_draw_background (curr_sb->ordering_table, &ot_idx);
+
   draw_sprites (curr_sb->ordering_table, &ot_idx);
+  bg_draw_foreground (curr_sb->ordering_table, &ot_idx);
 
   /* Handling player separately so that they're always on top. */
   draw_player_sprite (curr_sb->ordering_table, &ot_idx);

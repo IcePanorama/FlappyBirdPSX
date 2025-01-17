@@ -13,6 +13,7 @@
 #include "input/cmdlist.h"
 #include "input/controlr.h"
 #include "sys/fb_defs.h"
+#include "video/backgrnd.h"
 
 #ifdef DEBUG_BUILD
   #include <stdio.h>
@@ -50,7 +51,7 @@ gm_init_game (void)
   init_compnt_pools ();
   player = pe_create_player_entity ();
   s_init_scoring (&player);
-  u8_score_msg_id = sw_print("0", (SCREEN_WIDTH) >> 1, (SCORE_MSG_Y_POS));
+  u8_score_msg_id = sw_print("0", ((FB_SCREEN_WIDTH)) >> 1, (SCORE_MSG_Y_POS));
   cm_init_collision_manager (&player);
 
   pm_init_pipe_manager ();
@@ -102,11 +103,11 @@ gm_update_game (void)
 void
 end_game (void)
 {
-  u8_game_over_msg_id = sw_print("Game over!", (SCREEN_WIDTH) >> 1,
+  u8_game_over_msg_id = sw_print("Game over!", ((FB_SCREEN_WIDTH)) >> 1,
                                  (GAME_OVER_MSG_Y_POS));
   if (gm_curr_score > u32_high_score)
   {
-    u8_high_score_msg_id = sw_print("New high score!", (SCREEN_WIDTH) >> 1,
+    u8_high_score_msg_id = sw_print("New high score!", ((FB_SCREEN_WIDTH)) >> 1,
              (NEW_HIGH_SCORE_MSG_Y_POS));
     b_new_high_score = TRUE;
     u32_high_score = gm_curr_score;
@@ -125,6 +126,7 @@ normal_update (void)
 
   cm_handle_collisions ();
   update_physics_compnts (v2_entity_pos);
+  bg_scroll_background ();
   update_sprites (v2_entity_pos);
   update_col_shapes (v2_entity_pos);
 }
@@ -179,7 +181,7 @@ gm_increase_score (void)
   gm_curr_score++;
   sprintf(score_buffer, "%d", gm_curr_score);
   sw_destroy_text_output (u8_score_msg_id);
-  u8_score_msg_id = sw_print(score_buffer, (SCREEN_WIDTH) >> 1, (SCORE_MSG_Y_POS));
+  u8_score_msg_id = sw_print(score_buffer, ((FB_SCREEN_WIDTH)) >> 1, (SCORE_MSG_Y_POS));
 }
 
 void

@@ -88,6 +88,10 @@ init_player_sprite_compnt (PlayerEntity_t *pe)
   pe->psc_sprite_compnt->update = pe_update_player_sprite_xy;
 }
 
+/*
+ *  FIXME: Sprites probably don't need func ptrs anymore, make this a func in
+ *  sprite compnt file.
+ */
 void
 pe_update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
 {

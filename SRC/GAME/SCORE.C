@@ -19,7 +19,7 @@ s_init_scoring (PlayerEntity_t *p)
   assert(p != 0);
 #endif /* DEBUG_BUILD */
   player = p;
-  i16_green_area_start = -((player->u8_width + (PIE_HALF_PIPE_WIDTH)) << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
+  i16_green_area_start = -((player->u8_width + (PIE_HALF_PIPE_WIDTH)) << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
 }
 
 bool_t

@@ -1,7 +1,7 @@
 #include "game/gamemngr.h"
 #include "input/controlr.h"
 #include "sys/fb_bools.h"
-#include "video/video.h"
+#include "video/renderer.h"
 
 #include <sys/types.h>
 #include <libcd.h>
@@ -18,14 +18,14 @@ int
 main (void)
 {
   init_cd ();
-  v_init_video ();
+  r_init_renderer ();
   ctrl_init_controllers ();
   gm_init_game ();
 
   while (TRUE)
   {
     gm_update_game ();
-    v_render_screen ();
+    r_render_screen ();
   }
 
   gm_destroy_game ();

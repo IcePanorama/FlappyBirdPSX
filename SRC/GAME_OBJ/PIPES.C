@@ -15,12 +15,11 @@
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_PIPES_VALUE (255)
-#define MOVE_SPEED (30)
 #define HALF_GAP_SIZE (40)
 #define GAP_PLUS_FIVE (85)
 #define OFF_SCREEN (\
-  ((-HALF_SCREEN_WIDTH) - (PIE_HALF_PIPE_WIDTH)) \
-  << (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+  ((-(FB_HALF_SCREEN_WIDTH)) - (PIE_HALF_PIPE_WIDTH)) \
+  << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
 
 static void init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
                                         uint16_t u16_heights[2]);
@@ -40,7 +39,7 @@ pie_create_pipes_entity (void)
   pe.u8_eid = EID_PIPES_ID + (u8_num_pipes_created << 1);
 
   //FIXME: we only care about the y value, this shouldn't be a v2!
-  pe.v2_origin.y = rand() % 101 - 50;
+  pe.v2_origin.y = rand() % 91 - 30;
 
   init_pipes_physics_compnts (&pe, v2_pos, u16_heights);
 
@@ -53,9 +52,9 @@ pie_create_pipes_entity (void)
 
   for (i = 0; i < 2; i++)
   {
-    pe.pcsc_col_shape_compnts[i] = csc_create_new_col_shape (pe.u8_eid + i,
-                                                             (PIE_PIPE_WIDTH),
-                                                             u16_heights[i]);
+    pe.pcsc_col_shape_compnts[i] =
+      csc_create_new_col_shape (pe.u8_eid + i, (PIE_PIPE_WIDTH),
+                                u16_heights[i]);
     csc_update_col_shape (pe.pcsc_col_shape_compnts[i], &v2_pos[i]);
     pe.pcsc_col_shape_compnts[i] = 0;
   }
@@ -76,26 +75,26 @@ init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
 
     // Default starting x pos is offscreen, on the right
     pe->ppc_physics_compnts[i]->v2_position.x =
-      ((HALF_SCREEN_WIDTH) + (PIE_HALF_PIPE_WIDTH));
+      (((FB_HALF_SCREEN_WIDTH)) + (PIE_HALF_PIPE_WIDTH));
     pe->ppc_physics_compnts[i]->v2_position.x <<=
-      (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+      (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
     v2_out_pos[i].x = pe->ppc_physics_compnts[i]->v2_position.x;
 
-    pe->ppc_physics_compnts[i]->v2_velocity.x = -MOVE_SPEED;
+    pe->ppc_physics_compnts[i]->v2_velocity.x = -(FB_MOVEMENT_SPEED);
     pe->ppc_physics_compnts[i]->v2_velocity.y = 0;
 
     pe->ppc_physics_compnts[i]->b_use_gravity = FALSE;
   }
 
-  u16_heights[0] = (pe->v2_origin.y - (HALF_GAP_SIZE)) + (HALF_SCREEN_HEIGHT);
-  u16_heights[1] = (HALF_SCREEN_HEIGHT) - (pe->v2_origin.y + (HALF_GAP_SIZE));
+  u16_heights[0] = (pe->v2_origin.y - (HALF_GAP_SIZE)) + ((FB_HALF_SCREEN_HEIGHT));
+  u16_heights[1] = ((FB_HALF_SCREEN_HEIGHT)) - (pe->v2_origin.y + (HALF_GAP_SIZE));
 
   /* Calculate top pipe's y pos. */
   pe->ppc_physics_compnts[0]->v2_position.y =
     pe->v2_origin.y - (HALF_GAP_SIZE) - (u16_heights[0] >> 1);
   pe->ppc_physics_compnts[0]->v2_position.y <<=
-    (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+    (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   v2_out_pos[0].y = pe->ppc_physics_compnts[0]->v2_position.y;
   pe->ppc_physics_compnts[0] = 0;
@@ -104,7 +103,7 @@ init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
   pe->ppc_physics_compnts[1]->v2_position.y =
     pe->v2_origin.y + (HALF_GAP_SIZE) + (u16_heights[1] >> 1);
   pe->ppc_physics_compnts[1]->v2_position.y <<=
-    (WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+    (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   v2_out_pos[1].y = pe->ppc_physics_compnts[1]->v2_position.y;
   pe->ppc_physics_compnts[1] = 0;

@@ -17,7 +17,7 @@
 #define TPAGE_STARTING_Y_VALUE (0)
 
 //TODO: rename.
-#define SPRITES_NUM_SECTORS (20)
+#define SPRITES_NUM_SECTORS (35)
 #define SPRITES_SIZE_BYTES ((SPRITES_NUM_SECTORS) << 11)
 
 /**
@@ -25,7 +25,9 @@
  *  `u_short **, char *`.
  */
 #define ALIGN_PTR_TO_NEAREST_BYTE(ptr, start) \
-  (*(ptr)) += (4 - (((char *)(*(ptr)) - (start)) % 4)) % 4
+  while ((((char *)(*(ptr)) - (start))) % 4 != 0) \
+    (*(ptr))++;
+
 
 DR_TPAGE tpages[TEXTID_NUM_TEXTURES] = {{0}};
 DR_TPAGE player_tpage = {0};
@@ -57,9 +59,8 @@ static void process_pixel_data (char *data_start, u_short **data_ptr,
 void
 tmg_auto_load_textures (void)
 {
-  load_texture("\\ASSETS\\SPRITES.DAT;1");
   load_texture("\\ASSETS\\FONT.DAT;1");
-  load_texture("\\ASSETS\\PIPES.DAT;1");
+  load_texture("\\ASSETS\\SPRITES.DAT;1");
 }
 
 void
@@ -89,11 +90,6 @@ load_texture (const char *path)
   for (i = 0; i < u16_num_entries; i++)
   {
     u8_entry_id = (*work) & 0xFF;
-
-    printf("%d\n", u8_entry_id);
-    printf("%04X\n", *work);
-    printf("%d\n",TEXTID_NUM_TEXTURES);
-    printf("%d\n", (char *)work - (char *)(&sprite_data[0]));
 #ifdef DEBUG_BUILD
     assert(u8_entry_id < TEXTID_NUM_TEXTURES);
 #endif /* DEBUG_BUILD */
@@ -147,7 +143,7 @@ process_pixel_data (char *data_start, u_short **data_ptr, TextureID_t tid)
    *  `((u16_tpage_x - 63) / 64) * 64`.
    */
   u16_tpage_x = ((u16_tpage_x - 63) >> 6) << 6;
-  if (u16_tpage_x < SCREEN_WIDTH)
+  if (u16_tpage_x < (FB_SCREEN_WIDTH))
   {
     u16_tpage_y += 256;
     u16_tpage_x =(TPAGE_STARTING_X_VALUE);
@@ -164,6 +160,5 @@ process_pixel_data (char *data_start, u_short **data_ptr, TextureID_t tid)
 
   texture_tpage_lookup[tid] = GetTPage (0, 0, rect.x, rect.y);
   SetDrawTPage (&tpages[tid], 0, 0, texture_tpage_lookup[tid]);
-  //FIXME: issue is coming from here, I believe.
   (*data_ptr) += (rect.w * rect.h);
 }
