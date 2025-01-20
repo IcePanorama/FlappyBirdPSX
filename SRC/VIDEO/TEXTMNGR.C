@@ -10,8 +10,8 @@
   #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
-#define CLUT_STARTING_X_VALUE (1024)
-#define CLUT_STARTING_Y_VALUE (512)
+#define CLUT_STARTING_X_VALUE (0)
+#define CLUT_STARTING_Y_VALUE ((FB_SCREEN_HEIGHT) << 1)
 
 #define TPAGE_STARTING_X_VALUE (1024)
 #define TPAGE_STARTING_Y_VALUE (0)
@@ -109,11 +109,17 @@ process_clut (char *data_start, u_short **data_ptr, TextureID_t tid)
 {
   static uint16_t u16_clut_x = (CLUT_STARTING_X_VALUE);
   static uint16_t u16_clut_y = (CLUT_STARTING_Y_VALUE);
+  uint16_t u16_clut_width;
+  uint16_t u16_clut_height;
 
-  u16_clut_x -= **data_ptr;
+#ifdef DEBUG_BUILD
+    assert(u16_clut_x < 1024);
+#endif /* DEBUG_BUILD */
+
+  u16_clut_width = **data_ptr;
   (*data_ptr)++;
 
-  u16_clut_y -= **data_ptr;
+  u16_clut_height = **data_ptr;
   (*data_ptr)++;
 
   ALIGN_PTR_TO_NEAREST_BYTE(data_ptr, data_start);
@@ -122,6 +128,15 @@ process_clut (char *data_start, u_short **data_ptr, TextureID_t tid)
     LoadClut2((u_long *)(*data_ptr), u16_clut_x, u16_clut_y);
   DrawSync (0);
   (*data_ptr) += 16; // skip over clut
+
+  u16_clut_y += u16_clut_height;
+  if (u16_clut_y > 512)
+  {
+    u16_clut_x += u16_clut_width;
+    /** Round clut x to the nearest multiple of 16. */
+    u16_clut_x = ((u16_clut_x + 63) >> 6) << 6;
+    u16_clut_y = (CLUT_STARTING_Y_VALUE);
+  }
 }
 
 void
@@ -130,6 +145,10 @@ process_pixel_data (char *data_start, u_short **data_ptr, TextureID_t tid)
   static uint16_t u16_tpage_x = (TPAGE_STARTING_X_VALUE);
   static uint16_t u16_tpage_y = (TPAGE_STARTING_Y_VALUE);
   RECT rect;
+
+#ifdef DEBUG_BUILD
+  assert(u16_tpage_y < 512);
+#endif /* DEBUG_BUILD */
 
   rect.w = **data_ptr;
   (*data_ptr)++;

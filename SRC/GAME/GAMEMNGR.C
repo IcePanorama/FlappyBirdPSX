@@ -13,7 +13,7 @@
 #include "input/cmdlist.h"
 #include "input/controlr.h"
 #include "sys/fb_defs.h"
-#include "video/backgrnd.h"
+#include "video/envirnmt.h"
 
 #ifdef DEBUG_BUILD
   #include <stdio.h>
@@ -111,8 +111,8 @@ end_game (void)
              (NEW_HIGH_SCORE_MSG_Y_POS));
     b_new_high_score = TRUE;
     u32_high_score = gm_curr_score;
-    gm_curr_score = 0;
   }
+  gm_curr_score = 0;
   gs_curr_game_state = GSTATE_GAME_OVER;
 }
 
@@ -126,7 +126,7 @@ normal_update (void)
 
   cm_handle_collisions ();
   update_physics_compnts (v2_entity_pos);
-  bg_scroll_background ();
+  ev_scroll_background ();
   update_sprites (v2_entity_pos);
   update_col_shapes (v2_entity_pos);
 }
@@ -146,7 +146,7 @@ void
 update_sprites (Vec2_t *v2_input_pos)
 {
   /* Update player sprite */
-  (*sprite_pools[TEXTID_PIPES_TEXTURE].sprites[0].update)(&sprite_pools[TEXTID_PIPES_TEXTURE].sprites[0], &v2_input_pos[0]);
+  (*sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0].update)(&sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0], &v2_input_pos[0]);
 
   update_pipe_sprites(v2_input_pos);
 }
@@ -156,10 +156,10 @@ update_pipe_sprites (Vec2_t *v2_input_pos)
 {
   uint8_t i;
 
-   for (i = 1; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
+   for (i = 0; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
    {
      (*sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].update)(
-       &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i], &v2_input_pos[i]);
+       &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i], &v2_input_pos[i + 1]);
    }
 }
 
@@ -203,4 +203,5 @@ gm_restart_game (void)
   gm_destroy_game ();
   gm_init_game ();
   gs_curr_game_state = GSTATE_GAME_START;
+  ev_reset ();
 }

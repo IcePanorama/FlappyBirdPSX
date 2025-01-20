@@ -1,3 +1,4 @@
+/** TODO: adjust spacing between pairs of pipes. */
 #include "game_obj/pipes.h"
 #include "compnts/colshape.h"
 #include "compnts/physics.h"
@@ -15,8 +16,13 @@
 #endif /* DEBUG_BUILD */
 
 #define MAX_NUM_PIPES_VALUE (255)
-#define HALF_GAP_SIZE (40)
-#define GAP_PLUS_FIVE (85)
+#define HALF_GAP_SIZE (35)
+#define PIPE_HEAD_SIZE (15)
+
+#define RAND_ORIGIN_MIN (-(FB_HALF_SCREEN_HEIGHT) + (HALF_GAP_SIZE) + ((PIPE_HEAD_SIZE) << 1))
+#define RAND_ORIGIN_MAX ((FB_HALF_SCREEN_HEIGHT) - (FB_FOREGROUND_HEIGHT) - (HALF_GAP_SIZE) - (PIPE_HEAD_SIZE))
+#define RAND_ORIGIN_RANGE ((RAND_ORIGIN_MAX) - (RAND_ORIGIN_MIN) + 1)
+
 #define OFF_SCREEN (\
   ((-(FB_HALF_SCREEN_WIDTH)) - (PIE_HALF_PIPE_WIDTH)) \
   << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
@@ -39,7 +45,7 @@ pie_create_pipes_entity (void)
   pe.u8_eid = EID_PIPES_ID + (u8_num_pipes_created << 1);
 
   //FIXME: we only care about the y value, this shouldn't be a v2!
-  pe.v2_origin.y = rand() % 91 - 30;
+  pe.v2_origin.y = rand() % RAND_ORIGIN_RANGE + RAND_ORIGIN_MIN;
 
   init_pipes_physics_compnts (&pe, v2_pos, u16_heights);
 

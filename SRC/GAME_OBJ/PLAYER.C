@@ -14,7 +14,7 @@
   #include <assert.h>
 #endif /* DEBUG_BUILD */
 
-#define PLAYER_SIZE (16)
+#define PLAYER_SIZE (20)
 #define PLAYER_JUMP_VELOCITY (256)
 
 /* Player Flags */
@@ -74,7 +74,7 @@ void
 init_player_sprite_compnt (PlayerEntity_t *pe)
 {
   pe->psc_sprite_compnt =
-    sc_create_new_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid);
+    sc_create_new_sprite (&sprite_pools[TEXTID_PLAYER_TEXTURE], pe->u8_eid);
 #ifdef DEBUG_BUILD
   assert(pe->psc_sprite_compnt != 0);
 #endif /* DEBUG_BUILD */
@@ -96,13 +96,25 @@ void
 pe_update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
 {
   Vec2_t v2_cs_pos;  // camera-space position
+  static uint8_t u8_num_calls = 0;
+  static uint16_t u16_u0 = 0;
 
   if (sc == 0 || v2_pos == 0)
     return;
 
   v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
+  setXY0(&sc->sprite, v2_cs_pos.x - (sc->u8_width >> 1),
+         v2_cs_pos.y - (sc->u8_height >> 1));
 
-  setXY0(&sc->sprite, v2_cs_pos.x - (sc->u8_width >> 1), v2_cs_pos.y - (sc->u8_height >> 1));
+  /* Play wings flappying animation. */
+  if (u8_num_calls % 20 == 0)
+  {
+    u16_u0 += (PLAYER_SIZE);
+    u16_u0 %= (PLAYER_SIZE) * 3;
+    setUV0(&sc->sprite, u16_u0, 0);
+  }
+
+  u8_num_calls++;
 }
 
 void
@@ -120,7 +132,7 @@ pe_destroy_player_entity (PlayerEntity_t *pe)
   if (pe == 0 || (pe->u8_flags & (1 << (FL_DESTROYED)))) return;
 
   csc_destroy_col_shape (pe->u8_eid);
-  destroy_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid);
+  destroy_sprite (&sprite_pools[TEXTID_PLAYER_TEXTURE], pe->u8_eid);
   destroy_physics_compnt (pe->u8_eid);
 
   pe->u8_flags |= (1 << (FL_DESTROYED));

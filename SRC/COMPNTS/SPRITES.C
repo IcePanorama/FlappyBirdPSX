@@ -16,6 +16,7 @@ sc_init_sprite_compnt_pool (void)
 
 //CLUT is incorrect for one of these?
   sprite_pools[TEXTID_PIPES_TEXTURE].texture_id = TEXTID_PIPES_TEXTURE;
+  sprite_pools[TEXTID_PLAYER_TEXTURE].texture_id = TEXTID_PLAYER_TEXTURE;
 
   for (i = 0; i < (SPRITES_NUM_POOLS); i++)
   {

@@ -15,7 +15,7 @@
 #include "game_obj/pipes.h"
 #include "sys/fb_ints.h"
 #include "sys/fb_defs.h"
-#include "video/backgrnd.h"
+#include "video/envirnmt.h"
 #include "video/scrbuff.h"
 #include "video/textlkup.h"
 #include "video/textmngr.h"
@@ -58,9 +58,8 @@ r_init_renderer (void)
   clear_vram ();
 
   tmg_auto_load_textures ();
-  SetDrawTPage(&player_tpage, 0, 0,
-               texture_tpage_lookup[TEXTID_PIPES_TEXTURE]);
-  bg_init_background();
+//  SetDrawTPage(&player_tpage, 0, 0, texture_tpage_lookup[TEXTID_PIPES_TEXTURE]);
+  ev_init_background();
   sw_init ();
 
   SetDispMask (1);
@@ -89,13 +88,12 @@ r_render_screen (void)
 
   ClearOTag (curr_sb->ordering_table, OT_MAX_LEN);
 
-  bg_draw_background (curr_sb->ordering_table, &ot_idx);
-
+  ev_draw_background (curr_sb->ordering_table, &ot_idx);
   draw_sprites (curr_sb->ordering_table, &ot_idx);
-  bg_draw_foreground (curr_sb->ordering_table, &ot_idx);
-
   /* Handling player separately so that they're always on top. */
   draw_player_sprite (curr_sb->ordering_table, &ot_idx);
+
+  ev_draw_foreground (curr_sb->ordering_table, &ot_idx);
 
   //FIXME: make this a macro function to get rid of the compiler warning.
   if (FALSE)  dump_font_img (curr_sb->ordering_table, &ot_idx);
@@ -120,31 +118,22 @@ void
 draw_sprites (u_long *ot, u_long *ot_idx)
 {
   uint8_t i;
-  uint8_t j;
 
-  for (i = 0; i < TEXTID_NUM_TEXTURES; i++)
+  if (sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites == 0) return;
+
+#ifdef DEBUG_BUILD
+  assert((*ot_idx) < (OT_MAX_LEN));
+#endif /* DEBUG_BUILD */
+  AddPrim(&ot[(*ot_idx)], &tpages[sprite_pools[TEXTID_PIPES_TEXTURE].texture_id]);
+  (*ot_idx)++;
+
+  for (i = 0; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
   {
-    /* Skip unused sprites. */
-    if (sprite_pools[i].u8_num_sprites == 0) continue;
-
 #ifdef DEBUG_BUILD
     assert((*ot_idx) < (OT_MAX_LEN));
 #endif /* DEBUG_BUILD */
-    AddPrim(&ot[(*ot_idx)], &tpages[sprite_pools[i].texture_id]);
+    AddPrim(&ot[(*ot_idx)], &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].sprite);
     (*ot_idx)++;
-
-    for (j = 0; j < sprite_pools[i].u8_num_sprites; j++)
-    {
-      /* Player sprite is handled separately. */
-      if (sprite_pools[i].sprites[j].u8_parent_id == EID_PLAYER_ID)
-        continue;
-
-#ifdef DEBUG_BUILD
-      assert((*ot_idx) < (OT_MAX_LEN));
-#endif /* DEBUG_BUILD */
-      AddPrim(&ot[(*ot_idx)], &sprite_pools[sprite_pools[i].texture_id].sprites[j].sprite);
-      (*ot_idx)++;
-    }
   }
 }
 
@@ -155,14 +144,15 @@ draw_player_sprite (u_long *ot, u_long *ot_idx)
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (OT_MAX_LEN));
 #endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)], &player_tpage);
+  AddPrim(&ot[(*ot_idx)],
+          &tpages[sprite_pools[TEXTID_PLAYER_TEXTURE].texture_id]);
   (*ot_idx)++;
 
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (OT_MAX_LEN));
 #endif /* DEBUG_BUILD */
   AddPrim (&ot[(*ot_idx)],
-           &sprite_pools[(TEXTID_PIPES_TEXTURE)].sprites[0].sprite);
+           &sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0].sprite);
   (*ot_idx)++;
 }
 
