@@ -1,7 +1,7 @@
 #ifndef _FLAPPY_BIRD_PSX_DEFS_H_
 #define _FLAPPY_BIRD_PSX_DEFS_H_
 
-// FIXME: add FB prefix to these defs
+// FIXME: should this be in `video/vid_defs.h` instead?
 #define FB_SCREEN_WIDTH (320)
 #define FB_SCREEN_HEIGHT (240)
 #define FB_HALF_SCREEN_WIDTH ((FB_SCREEN_WIDTH) >> 1)

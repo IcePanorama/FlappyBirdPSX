@@ -15,13 +15,13 @@ void
 sb_init_screen_buffers (void)
 {
   //TODO: I may be able to afford 480i, given how simple FB is.
-	SetDefDrawEnv (&screen_buffers[0].draw_env, 0, 0, (FB_SCREEN_WIDTH),
+  SetDefDrawEnv (&screen_buffers[0].draw_env, 0, 0, (FB_SCREEN_WIDTH),
                  (FB_SCREEN_HEIGHT));
-	SetDefDrawEnv (&screen_buffers[1].draw_env, 0, (FB_SCREEN_HEIGHT), (FB_SCREEN_WIDTH),
-                 (FB_SCREEN_HEIGHT));
-	SetDefDispEnv (&screen_buffers[0].disp_env, 0, (FB_SCREEN_HEIGHT), (FB_SCREEN_WIDTH),
-                 (FB_SCREEN_HEIGHT));
-	SetDefDispEnv (&screen_buffers[1].disp_env, 0, 0, (FB_SCREEN_WIDTH),
+  SetDefDrawEnv (&screen_buffers[1].draw_env, 0, (FB_SCREEN_HEIGHT),
+                 (FB_SCREEN_WIDTH), (FB_SCREEN_HEIGHT));
+  SetDefDispEnv (&screen_buffers[0].disp_env, 0, (FB_SCREEN_HEIGHT),
+                 (FB_SCREEN_WIDTH), (FB_SCREEN_HEIGHT));
+  SetDefDispEnv (&screen_buffers[1].disp_env, 0, 0, (FB_SCREEN_WIDTH),
                  (FB_SCREEN_HEIGHT));
 
   screen_buffers[0].draw_env.isbg = screen_buffers[1].draw_env.isbg = 1;

@@ -1,11 +1,12 @@
 #include "video/envirnmt.h"
-#include "video/scrbuff.h"
 #include "video/textlkup.h"
 #include "video/textmngr.h"
 #include "sys/fb_defs.h"
 #include "sys/fb_ints.h"
 
 #ifdef DEBUG_BUILD
+  #include "video/vid_defs.h"
+
   #include <assert.h>
   #include <stdio.h>
 #endif /* DEBUG_BUILD */
@@ -15,7 +16,16 @@
 
 #define FOREGROUND_HEIGHT (FB_FOREGROUND_HEIGHT)
 
-SPRT ev_background_sprites[EVT_NUM_TILES] = {{0}};
+enum EVTiles_e
+{
+ EVT_TOP_LEFT,
+ EVT_TOP_RIGHT,
+ EVT_BOT_LEFT,
+ EVT_BOT_RIGHT,
+ EVT_NUM_TILES
+};
+
+static SPRT ev_background_sprites[EVT_NUM_TILES] = {{0}};
 
 void
 ev_init_background (void)
@@ -51,7 +61,7 @@ ev_draw_background (u_long *ot, u_long *ot_idx)
   uint8_t i;
 
 #ifdef DEBUG_BUILD
-  assert((*ot_idx) < (OT_MAX_LEN));
+  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
   AddPrim(&ot[(*ot_idx)], &tpages[TEXTID_BG_TEXTURE]);
   (*ot_idx)++;
@@ -59,7 +69,7 @@ ev_draw_background (u_long *ot, u_long *ot_idx)
   for (i = 0; i < EVT_BOT_LEFT; i++)
   {
 #ifdef DEBUG_BUILD
-    assert((*ot_idx) < (OT_MAX_LEN));
+    assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
     AddPrim(&ot[(*ot_idx)], &ev_background_sprites[i]);
     (*ot_idx)++;
@@ -72,7 +82,7 @@ ev_draw_foreground (u_long *ot, u_long *ot_idx)
   uint8_t i;
 
 #ifdef DEBUG_BUILD
-  assert((*ot_idx) < (OT_MAX_LEN));
+  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
   AddPrim(&ot[(*ot_idx)], &tpages[TEXTID_FG_TEXTURE]);
   (*ot_idx)++;
@@ -80,7 +90,7 @@ ev_draw_foreground (u_long *ot, u_long *ot_idx)
   for (i = EVT_BOT_LEFT; i < EVT_NUM_TILES; i++)
   {
 #ifdef DEBUG_BUILD
-    assert((*ot_idx) < (OT_MAX_LEN));
+    assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
     AddPrim(&ot[(*ot_idx)], &ev_background_sprites[i]);
     (*ot_idx)++;

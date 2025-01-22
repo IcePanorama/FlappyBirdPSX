@@ -10,6 +10,7 @@ typedef enum GameState_e
   GSTATE_NUM_STATES
 } GameState_t;
 
-extern GameState_t gs_curr_game_state;
+GameState_t gs_get_curr_game_state (void);
+void gs_set_game_state (GameState_t new_state);
 
 #endif /* _GAME_STATE_H_ */

@@ -19,22 +19,17 @@
 #include "video/scrbuff.h"
 #include "video/textlkup.h"
 #include "video/textmngr.h"
+#include "video/uimanagr.h"
 
 #ifdef DEBUG_BUILD
   #include <assert.h>
   #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
-//tmp
-#include "sys/fb_bools.h"
-#include <libcd.h>
-
 #define DIST_TO_SCREEN (512)
 
 static void draw_sprites (u_long *ot, u_long *ot_idx);
 static void draw_player_sprite (u_long *ot, u_long *ot_idx);
-static void dump_font_img (u_long *ot, u_long *ot_idx);
-static void draw_text_output (u_long *ot, u_long *ot_idx);
 static void clear_vram (void);
 
 void
@@ -42,7 +37,8 @@ r_init_renderer (void)
 {
   //TODO: figure out how to handle NTSC/PAL differences elegantly
   SetVideoMode (0);
-  GsInitGraph ((FB_SCREEN_WIDTH), (FB_SCREEN_HEIGHT), GsNONINTER|GsOFSGPU, 1, 0);
+  GsInitGraph ((FB_SCREEN_WIDTH), (FB_SCREEN_HEIGHT), GsNONINTER|GsOFSGPU, 1,
+               0);
 
   FntLoad (960, 256);
   SetDumpFnt (FntOpen (0, 8, (FB_SCREEN_WIDTH), 64, 0, 512));
@@ -58,9 +54,8 @@ r_init_renderer (void)
   clear_vram ();
 
   tmg_auto_load_textures ();
-//  SetDrawTPage(&player_tpage, 0, 0, texture_tpage_lookup[TEXTID_PIPES_TEXTURE]);
-  ev_init_background();
-  sw_init ();
+  ev_init_background ();
+  ui_init_ui_elements ();
 
   SetDispMask (1);
 }
@@ -84,21 +79,17 @@ r_render_screen (void)
 {
   u_long ot_idx = 0;
   static ScreenBuffer_t *curr_sb = screen_buffers;
-  curr_sb = (curr_sb == screen_buffers) ? screen_buffers + 1 : screen_buffers;
 
-  ClearOTag (curr_sb->ordering_table, OT_MAX_LEN);
+  curr_sb = (curr_sb == screen_buffers) ? screen_buffers + 1 : screen_buffers;
+  ClearOTag (curr_sb->ordering_table, FB_ORDERING_TABLE_MAX_LENGTH);
 
   ev_draw_background (curr_sb->ordering_table, &ot_idx);
   draw_sprites (curr_sb->ordering_table, &ot_idx);
-  /* Handling player separately so that they're always on top. */
   draw_player_sprite (curr_sb->ordering_table, &ot_idx);
 
   ev_draw_foreground (curr_sb->ordering_table, &ot_idx);
 
-  //FIXME: make this a macro function to get rid of the compiler warning.
-  if (FALSE)  dump_font_img (curr_sb->ordering_table, &ot_idx);
-
-  draw_text_output (curr_sb->ordering_table, &ot_idx);
+  ui_draw_ui_elements (curr_sb->ordering_table, &ot_idx);
 
   DrawSync (0);
   VSync (0);
@@ -122,92 +113,38 @@ draw_sprites (u_long *ot, u_long *ot_idx)
   if (sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites == 0) return;
 
 #ifdef DEBUG_BUILD
-  assert((*ot_idx) < (OT_MAX_LEN));
+  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)], &tpages[sprite_pools[TEXTID_PIPES_TEXTURE].texture_id]);
+  AddPrim(&ot[(*ot_idx)],
+          &tpages[sprite_pools[TEXTID_PIPES_TEXTURE].texture_id]);
   (*ot_idx)++;
 
   for (i = 0; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
   {
 #ifdef DEBUG_BUILD
-    assert((*ot_idx) < (OT_MAX_LEN));
+    assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-    AddPrim(&ot[(*ot_idx)], &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].sprite);
+    AddPrim(&ot[(*ot_idx)],
+            &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].sprite);
     (*ot_idx)++;
   }
 }
 
+/** Handling player separately so that they're always on top. */
 void
 draw_player_sprite (u_long *ot, u_long *ot_idx)
 {
-  /* Draw player sprite on top. This assumes player is always sprite 0. */
 #ifdef DEBUG_BUILD
-  assert((*ot_idx) < (OT_MAX_LEN));
+  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
   AddPrim(&ot[(*ot_idx)],
           &tpages[sprite_pools[TEXTID_PLAYER_TEXTURE].texture_id]);
   (*ot_idx)++;
 
 #ifdef DEBUG_BUILD
-  assert((*ot_idx) < (OT_MAX_LEN));
+  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
   AddPrim (&ot[(*ot_idx)],
            &sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0].sprite);
   (*ot_idx)++;
-}
-
-void
-dump_font_img (u_long *ot, u_long *ot_idx)
-{
-  static POLY_FT4 test;
-
-  SetPolyFT4 (&test);
-  SetShadeTex (&test, 1);
-  test.tpage = texture_tpage_lookup[TEXTID_FONT_TEXTURE];
-  test.clut = texture_clut_lookup[TEXTID_FONT_TEXTURE];
-  setXY4(&test,                           10,                            50,
-                (SW_FONT_TEXTURE_WIDTH) + 10,                            50,
-                                          10, (SW_FONT_TEXTURE_HEIGHT) + 50,
-                (SW_FONT_TEXTURE_WIDTH) + 10, (SW_FONT_TEXTURE_HEIGHT) + 50
-  );
-  setUV4(&test,                           0, 0,
-                255, 0,
-                                          0, 63,
-                255, 63);
-
-#ifdef DEBUG_BUILD
-  assert((*ot_idx) < (OT_MAX_LEN));
-#endif /* DEBUG_BUILD */
-  AddPrim (&ot[(*ot_idx)], &test);
-  (*ot_idx)++;
-}
-
-void
-draw_text_output (u_long *ot, u_long *ot_idx)
-{
-  uint8_t i;
-  uint8_t j;
-  static DR_TPAGE tpage;
-
-
-  SetDrawTPage(&tpage, 0, 0, texture_tpage_lookup[TEXTID_FONT_TEXTURE]);
-#ifdef DEBUG_BUILD
-  assert((*ot_idx) < (OT_MAX_LEN));
-#endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)], &tpage);
-  (*ot_idx)++;
-
-  for (i = 0; i < sw_num_outputs; i++)
-  {
-    for (j = 0; j < sw_output_pool[i].u8_length; j++)
-    {
-      if (sw_output_pool[i].zcs_msg[j] == '\0') break;
-#ifdef DEBUG_BUILD
-      assert((*ot_idx) < (OT_MAX_LEN));
-#endif /* DEBUG_BUILD */
-
-      AddPrim (&ot[(*ot_idx)], &sw_output_pool[i].glyphs[j]);
-      (*ot_idx)++;
-    }
-  }
 }

@@ -22,16 +22,16 @@ v2_convert_world_space_to_camera_space (Vec2_t *v2_input, Vec2_t *v2_output)
 void
 u_seed_rng (void)
 {
-  static bool_t b_rng_seeded = FALSE;
+  static bool_t b_rng_seeded = (FALSE);
   uint16_t u16_seed;
 
   // FIXME: should this change really be happening here?
-  gs_curr_game_state = GSTATE_NORMAL;
+  gs_set_game_state (GSTATE_NORMAL);
 
   if (b_rng_seeded)  return;
   b_rng_seeded = TRUE;
 
-  u16_seed = TIME_GET_CURRENT_TIME();
+  u16_seed = (TIME_GET_CURRENT_TIME());
 #ifdef DEBUG_BUILD
   printf ("Rand seed: %d\n", u16_seed);
 #endif /* DEBUG_BUILD */

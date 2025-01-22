@@ -13,6 +13,7 @@
 #include "input/cmdlist.h"
 #include "input/controlr.h"
 #include "sys/fb_defs.h"
+#include "sys/fb_ints.h"
 #include "video/envirnmt.h"
 
 #ifdef DEBUG_BUILD
@@ -36,22 +37,12 @@ static void init_compnt_pools (void);
 static void normal_update (void);
 static void end_game (void);
 
-uint32_t gm_curr_score = 0;
-//TODO: save and load this off of memory cards.
-static uint32_t u32_high_score = 0;
-
-static uint8_t u8_score_msg_id;
-static uint8_t u8_game_over_msg_id;
-static uint8_t u8_high_score_msg_id;
-static bool_t b_new_high_score = FALSE;
-
 void
 gm_init_game (void)
 {
   init_compnt_pools ();
   player = pe_create_player_entity ();
   s_init_scoring (&player);
-  u8_score_msg_id = sw_print("0", ((FB_SCREEN_WIDTH)) >> 1, (SCORE_MSG_Y_POS));
   cm_init_collision_manager (&player);
 
   pm_init_pipe_manager ();
@@ -72,29 +63,23 @@ init_compnt_pools (void)
   si_init_signal_inboxes ();
 }
 
-/*
- *  TODO: start work on visuals
- *    - Replace player with texture/sprite.
- *    - Add scrolling background
- */
 void
 gm_update_game (void)
 {
-  ctrl_handle_user_input (cmdl_command_lists[gs_curr_game_state],
+  GameState_t curr_game_state = gs_get_curr_game_state ();
+  ctrl_handle_user_input (cmdl_command_lists[curr_game_state],
                           (void *)&player);
 
-  if (gs_curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
+  if (curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
   {
     end_game ();
   }
 
-  switch (gs_curr_game_state)
+  switch (curr_game_state)
   {
     case GSTATE_NORMAL:
       normal_update ();
-    case GSTATE_GAME_START:
-    case GSTATE_GAME_PAUSED:
-    case GSTATE_GAME_OVER:
+      break;
     default:
       return;
   }
@@ -103,17 +88,8 @@ gm_update_game (void)
 void
 end_game (void)
 {
-  u8_game_over_msg_id = sw_print("Game over!", ((FB_SCREEN_WIDTH)) >> 1,
-                                 (GAME_OVER_MSG_Y_POS));
-  if (gm_curr_score > u32_high_score)
-  {
-    u8_high_score_msg_id = sw_print("New high score!", ((FB_SCREEN_WIDTH)) >> 1,
-             (NEW_HIGH_SCORE_MSG_Y_POS));
-    b_new_high_score = TRUE;
-    u32_high_score = gm_curr_score;
-  }
-  gm_curr_score = 0;
-  gs_curr_game_state = GSTATE_GAME_OVER;
+  s_process_high_scores ();
+  gs_set_game_state (GSTATE_GAME_OVER);
 }
 
 void
@@ -137,16 +113,15 @@ update_physics_compnts (Vec2_t *v2_output_pos)
   uint8_t i;
 
   for (i = 0; i < u8_pc_num_physics; i++)
-  {
     update_physics_compnt (&pc_physics_pool[i], &v2_output_pos[i]);
-  }
 }
 
 void
 update_sprites (Vec2_t *v2_input_pos)
 {
   /* Update player sprite */
-  (*sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0].update)(&sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0], &v2_input_pos[0]);
+  (*sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0].update)(
+    &sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0], &v2_input_pos[0]);
 
   update_pipe_sprites(v2_input_pos);
 }
@@ -157,10 +132,8 @@ update_pipe_sprites (Vec2_t *v2_input_pos)
   uint8_t i;
 
    for (i = 0; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
-   {
      (*sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].update)(
        &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i], &v2_input_pos[i + 1]);
-   }
 }
 
 void
@@ -169,19 +142,7 @@ update_col_shapes (Vec2_t *v2_input_pos)
   uint8_t i;
 
   for (i = 0; i < u8_csc_num_col_shapes; i++)
-  {
     csc_update_col_shape(&csc_col_shape_pool[i], &v2_input_pos[i]);
-  }
-}
-
-void
-gm_increase_score (void)
-{
-  char score_buffer[7] = {0}; // max val: 999999\0
-  gm_curr_score++;
-  sprintf(score_buffer, "%d", gm_curr_score);
-  sw_destroy_text_output (u8_score_msg_id);
-  u8_score_msg_id = sw_print(score_buffer, ((FB_SCREEN_WIDTH)) >> 1, (SCORE_MSG_Y_POS));
 }
 
 void
@@ -193,15 +154,8 @@ gm_destroy_game (void)
 void
 gm_restart_game (void)
 {
-  sw_destroy_text_output (u8_score_msg_id);
-  sw_destroy_text_output (u8_game_over_msg_id);
-  if (b_new_high_score)
-  {
-    sw_destroy_text_output (u8_high_score_msg_id);
-    b_new_high_score = FALSE;
-  }
   gm_destroy_game ();
   gm_init_game ();
-  gs_curr_game_state = GSTATE_GAME_START;
+  gs_set_game_state (GSTATE_GAME_START);
   ev_reset ();
 }

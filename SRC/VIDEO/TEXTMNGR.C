@@ -15,14 +15,17 @@
 
 #define TPAGE_STARTING_X_VALUE (1024)
 #define TPAGE_STARTING_Y_VALUE (0)
+#define TPAGE_HEIGHT (256)
 
-//TODO: rename.
-#define SPRITES_NUM_SECTORS (35)
-#define SPRITES_SIZE_BYTES ((SPRITES_NUM_SECTORS) << 11)
+#define FILE_MAX_NUM_SECTORS (40)
+#define FILE_MAX_SIZE_BYTES ((FILE_MAX_NUM_SECTORS) << 11)
+
+#define VRAM_WIDTH (1024)
+#define VRAM_HEIGHT (512)
 
 /**
- *  Aligns a `ptr` to the nearest byte, relative to `start`. Params should be
- *  `u_short **, char *`.
+ *  Aligns a `ptr` to the nearest byte, relative to `start`.
+ *  Params should be `u_short **, char *`.
  */
 #define ALIGN_PTR_TO_NEAREST_BYTE(ptr, start) \
   while ((((char *)(*(ptr)) - (start))) % 4 != 0) \
@@ -35,26 +38,30 @@ DR_TPAGE player_tpage = {0};
 static void load_texture (const char *path);
 
 /**
- *  `data_start` points to the absolute beginning of file data and is used
- *  purely for data alignment. `data_ptr` should point to the beginning of a
- *  CLUT data pack entry.
+ *  Loads the clut pointed to by `data_ptr` into VRAM. Starts at
+ *  `(CLUT_STARTING_X_VALUE, CLUT_STARTING_Y_VALUE)` and automatically adjusts
+ *  its internal x, y values as needed. Automatically grows from that starting
+ *  position to `(VRAM_WIDTH, VRAM_HEIGHT)`.
  *
+ *  param:  `data_start`  beginning of file data, needed for data alignment.
+ *  param:  `data_ptr`    beginning of a CLUT data pack entry.
  *  See:
  *    https://www.github.com/IcePanorama/PSXBMPPacker/blob/main/include/color_lookup_table.hpp
  */
-static void process_clut (char *data_start, u_short **data_ptr,
-                          TextureID_t tid);
+static void process_clut (char *data_start, u_short **data_ptr, TextureID_t tid);
 
 /**
- *  `data_start` points to the absolute beginning of file data and is used
- *  purely for data alignment. `data_ptr` should point to the beginning of a
- *  pixel-data data pack entry.
+ *  Loads the pixel data pointed to by `data_ptr` into VRAM. Starts at
+ *  `(TPAGE_STARTING_X_VALUE, TPAGE_STARTING_Y_VALUE)` and automatically adjusts
+ *  its internal x, y values as needed. Automatically grows backwards from that
+ *  starting position to `(FB_SCREEN_WIDTH, CLUT_STARTING_Y_VALUE - 1)`.
  *
+ *  param:  `data_start`  beginning of file data, needed for data alignment.
+ *  param:  `data_ptr`    beginning of a pixel-data data pack entry.
  *  See:
  *    https://www.github.com/IcePanorama/PSXBMPPacker/blob/main/include/pixel_data.hpp
  */
-static void process_pixel_data (char *data_start, u_short **data_ptr,
-                                TextureID_t tid);
+static void process_pixel_data (char *data_start, u_short **data_ptr, TextureID_t tid);
 
 void
 tmg_auto_load_textures (void)
@@ -67,7 +74,7 @@ void
 load_texture (const char *path)
 {
   CdlFILE fptr;
-  u_long sprite_data[(SPRITES_SIZE_BYTES)] = {0};
+  u_long sprite_data[(FILE_MAX_SIZE_BYTES)] = {0};
   u_short *work;
   uint16_t i;
   uint8_t u8_type;
@@ -77,11 +84,12 @@ load_texture (const char *path)
   /*
    *  TODO: save the location of these files somewhere so we don't have to
    *  actually search for it on boot.
+   *  Also write a non-debug version of this without all the asserts.
    */
   assert(CdSearchFile (&fptr, (char *)path) != 0);
-  assert(fptr.size <= (SPRITES_SIZE_BYTES));
+  assert(fptr.size <= (FILE_MAX_SIZE_BYTES));
   assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
-  assert(CdRead ((SPRITES_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
+  assert(CdRead ((FILE_MAX_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
   CdReadSync(0, 0); // wait for operation to finish.
 
   work = (u_short *)(&sprite_data[0]);
@@ -119,6 +127,7 @@ process_clut (char *data_start, u_short **data_ptr, TextureID_t tid)
   u16_clut_width = **data_ptr;
   (*data_ptr)++;
 
+  //FIXME: not currently doing anything with this.
   u16_clut_height = **data_ptr;
   (*data_ptr)++;
 
@@ -130,11 +139,14 @@ process_clut (char *data_start, u_short **data_ptr, TextureID_t tid)
   (*data_ptr) += 16; // skip over clut
 
   u16_clut_y += u16_clut_height;
-  if (u16_clut_y > 512)
+  if (u16_clut_y > (VRAM_HEIGHT))
   {
     u16_clut_x += u16_clut_width;
-    /** Round clut x to the nearest multiple of 16. */
-    u16_clut_x = ((u16_clut_x + 63) >> 6) << 6;
+    /**
+     *  Rounds `u16_clut_x` up to the nearest multiple of 16.
+     *  Without bitshifts: `((u16_clut_x + 15) / 16) * 16`.
+     */
+    u16_clut_x = ((u16_clut_x + 15) >> 4) << 4;
     u16_clut_y = (CLUT_STARTING_Y_VALUE);
   }
 }
@@ -155,18 +167,22 @@ process_pixel_data (char *data_start, u_short **data_ptr, TextureID_t tid)
   rect.h = **data_ptr;
   (*data_ptr)++;
 
-  //TODO: handle collisions in the y direction.
-  u16_tpage_x -= rect.w;
-  /**
-   *  Rounds `u16_tpage_x` down to nearest multiple of 64. Without bitshifts:
-   *  `((u16_tpage_x - 63) / 64) * 64`.
-   */
-  u16_tpage_x = ((u16_tpage_x - 63) >> 6) << 6;
-  if (u16_tpage_x < (FB_SCREEN_WIDTH))
+  do
   {
-    u16_tpage_y += 256;
-    u16_tpage_x =(TPAGE_STARTING_X_VALUE);
+    u16_tpage_x -= rect.w;
+    /**
+     *  Rounds `u16_tpage_x` down to nearest multiple of 64.
+     *  Without bitshifts: `((u16_tpage_x - 63) / 64) * 64`.
+     */
+    u16_tpage_x = ((u16_tpage_x - 63) >> 6) << 6;
+    if (u16_tpage_x < (FB_SCREEN_WIDTH))
+    {
+      u16_tpage_y += (TPAGE_HEIGHT);
+      u16_tpage_x = (TPAGE_STARTING_X_VALUE);
+    }
   }
+  while ((u16_tpage_x < (FB_SCREEN_WIDTH)) || (u16_tpage_x >= (VRAM_WIDTH)));
+
   rect.x = u16_tpage_x;
   rect.y = u16_tpage_y;
 

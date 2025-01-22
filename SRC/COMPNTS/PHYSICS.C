@@ -115,7 +115,7 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
 
   pc->v2_position.x += pc->v2_velocity.x;
 
-  if (s_in_green_area(pc->v2_position.x))
+  if (s_in_green_area (pc->v2_position.x))
     s_process_scoring (pc->u8_parent_id);
 
   v2_output_pos->x = pc->v2_position.x;

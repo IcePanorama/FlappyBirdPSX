@@ -4,7 +4,10 @@
 #include "game_obj/player.h"
 #include "sys/fb_bools.h"
 
-/** Inits internal player pointer, calculates green zone x position. */
+/**
+ *  Inits internal player pointer, calculates green zone x position. Must be
+ *  called AFTER `ui_init_ui_elements`.
+ */
 void s_init_scoring (PlayerEntity_t *p);
 
 /**
@@ -20,5 +23,7 @@ bool_t s_in_green_area (int16_t x);
  *  towards the player's score already.
  */
 void s_process_scoring (uint8_t u8_eid);
+
+void s_process_high_scores (void);
 
 #endif /* _SCORE_H_ */
