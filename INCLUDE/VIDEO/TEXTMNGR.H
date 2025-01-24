@@ -13,7 +13,7 @@
 #include "video/textid.h"
 
 //idk if I like these being here.
-extern DR_TPAGE tpages[TEXTID_NUM_TEXTURES];
+extern DR_TPAGE tpages[TID_NUM_TEXTURES];
 extern DR_TPAGE player_tpage;
 
 void tmg_auto_load_textures (void);

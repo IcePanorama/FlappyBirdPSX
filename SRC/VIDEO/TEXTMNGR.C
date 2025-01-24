@@ -32,7 +32,7 @@
     (*(ptr))++;
 
 
-DR_TPAGE tpages[TEXTID_NUM_TEXTURES] = {{0}};
+DR_TPAGE tpages[TID_NUM_TEXTURES] = {{0}};
 DR_TPAGE player_tpage = {0};
 
 static void load_texture (const char *path);
@@ -86,10 +86,19 @@ load_texture (const char *path)
    *  actually search for it on boot.
    *  Also write a non-debug version of this without all the asserts.
    */
+#ifdef DEBUG_BUILD
   assert(CdSearchFile (&fptr, (char *)path) != 0);
   assert(fptr.size <= (FILE_MAX_SIZE_BYTES));
   assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
   assert(CdRead ((FILE_MAX_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);
+#else /* DEBUG_BUILD */
+  if ((CdSearchFile (&fptr, (char *)path) == 0)
+      || (CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) == 0)
+      || (CdRead ((FILE_MAX_NUM_SECTORS), sprite_data, CdlModeSpeed) == 0))
+  {
+    return;
+  }
+#endif /* DEBUG_BUILD */
   CdReadSync(0, 0); // wait for operation to finish.
 
   work = (u_short *)(&sprite_data[0]);
@@ -99,7 +108,7 @@ load_texture (const char *path)
   {
     u8_entry_id = (*work) & 0xFF;
 #ifdef DEBUG_BUILD
-    assert(u8_entry_id < TEXTID_NUM_TEXTURES);
+    assert(u8_entry_id < TID_NUM_TEXTURES);
 #endif /* DEBUG_BUILD */
 
     u8_type = (((*work) & 0xFF00) >> 8);
@@ -127,7 +136,6 @@ process_clut (char *data_start, u_short **data_ptr, TextureID_t tid)
   u16_clut_width = **data_ptr;
   (*data_ptr)++;
 
-  //FIXME: not currently doing anything with this.
   u16_clut_height = **data_ptr;
   (*data_ptr)++;
 

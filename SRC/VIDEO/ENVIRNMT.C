@@ -43,7 +43,7 @@ ev_init_background (void)
   for (i = 0; i < EVT_BOT_LEFT; i++)
   {
     setXY0(&ev_background_sprites[i], (TEXTURE_WIDTH) * i, 0);
-    ev_background_sprites[i].clut = texture_clut_lookup[TEXTID_BG_TEXTURE];
+    ev_background_sprites[i].clut = texture_clut_lookup[TID_BG_TEXTURE];
   }
 
   setWH(&ev_background_sprites[2], (TEXTURE_WIDTH), (FOREGROUND_HEIGHT));
@@ -51,7 +51,7 @@ ev_init_background (void)
   for (i = EVT_BOT_LEFT; i < EVT_NUM_TILES; i++)
   {
     setXY0(&ev_background_sprites[i], (TEXTURE_WIDTH) * (i - EVT_BOT_LEFT), (FB_SCREEN_HEIGHT) - (FOREGROUND_HEIGHT));
-    ev_background_sprites[i].clut = texture_clut_lookup[TEXTID_FG_TEXTURE];
+    ev_background_sprites[i].clut = texture_clut_lookup[TID_FG_TEXTURE];
   }
 }
 
@@ -63,7 +63,7 @@ ev_draw_background (u_long *ot, u_long *ot_idx)
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)], &tpages[TEXTID_BG_TEXTURE]);
+  AddPrim(&ot[(*ot_idx)], &tpages[TID_BG_TEXTURE]);
   (*ot_idx)++;
 
   for (i = 0; i < EVT_BOT_LEFT; i++)
@@ -84,7 +84,7 @@ ev_draw_foreground (u_long *ot, u_long *ot_idx)
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)], &tpages[TEXTID_FG_TEXTURE]);
+  AddPrim(&ot[(*ot_idx)], &tpages[TID_FG_TEXTURE]);
   (*ot_idx)++;
 
   for (i = EVT_BOT_LEFT; i < EVT_NUM_TILES; i++)

@@ -29,9 +29,9 @@ s_init_scoring (PlayerEntity_t *p)
   i16_green_area_start =
     -((player->u8_width + (PIE_HALF_PIPE_WIDTH)) << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
   ui_set_game_over_coin_state (UICS_NO_COIN);
-  ui_init_score_text (&s_current_score, &s_high_score);
   s_current_score = 0;
-  ui_update_current_score_text ();
+  ui_update_current_score_text (s_current_score);
+  ui_update_high_score_text (s_high_score);
 }
 
 bool_t
@@ -56,7 +56,7 @@ s_process_scoring (uint8_t u8_eid)
   if (!p->b_was_scored)
   {
     s_current_score++;
-    ui_update_current_score_text ();
+    ui_update_current_score_text (s_current_score);
     p->b_was_scored = (TRUE);
   }
 }
@@ -68,7 +68,7 @@ s_process_high_scores (void)
   {
     u16_2nd_high_score = s_high_score;
     s_high_score = s_current_score;
-    ui_update_high_score_text ();
+    ui_update_high_score_text (s_high_score);
     ui_set_game_over_coin_state (UICS_GOLD_COIN);
   }
   else if (s_current_score > u16_2nd_high_score)

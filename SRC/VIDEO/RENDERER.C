@@ -10,7 +10,6 @@
 #include "compnts/sprites.h"
 #include "compnts/wiframe.h"
 #include "game/gamemngr.h"
-#include "game/scrwritr.h"
 #include "game_obj/entityid.h"
 #include "game_obj/pipes.h"
 #include "sys/fb_ints.h"
@@ -40,7 +39,8 @@ r_init_renderer (void)
   GsInitGraph ((FB_SCREEN_WIDTH), (FB_SCREEN_HEIGHT), GsNONINTER|GsOFSGPU, 1,
                0);
 
-  FntLoad (960, 256);
+  clear_vram (); // need to do this before `FntLoad`.
+  FntLoad ((FB_SCREEN_WIDTH), 256);
   SetDumpFnt (FntOpen (0, 8, (FB_SCREEN_WIDTH), 64, 0, 512));
 
   SetGraphDebug (0);
@@ -50,8 +50,6 @@ r_init_renderer (void)
   SetGeomScreen (DIST_TO_SCREEN);
 
   sb_init_screen_buffers ();
-
-  clear_vram ();
 
   tmg_auto_load_textures ();
   ev_init_background ();
@@ -110,22 +108,22 @@ draw_sprites (u_long *ot, u_long *ot_idx)
 {
   uint8_t i;
 
-  if (sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites == 0) return;
+  if (sprite_pools[TID_PIPES_TEXTURE].u8_num_sprites == 0) return;
 
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
   AddPrim(&ot[(*ot_idx)],
-          &tpages[sprite_pools[TEXTID_PIPES_TEXTURE].texture_id]);
+          &tpages[sprite_pools[TID_PIPES_TEXTURE].texture_id]);
   (*ot_idx)++;
 
-  for (i = 0; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
+  for (i = 0; i < sprite_pools[TID_PIPES_TEXTURE].u8_num_sprites; i++)
   {
 #ifdef DEBUG_BUILD
     assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
     AddPrim(&ot[(*ot_idx)],
-            &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].sprite);
+            &sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite);
     (*ot_idx)++;
   }
 }
@@ -138,13 +136,13 @@ draw_player_sprite (u_long *ot, u_long *ot_idx)
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
   AddPrim(&ot[(*ot_idx)],
-          &tpages[sprite_pools[TEXTID_PLAYER_TEXTURE].texture_id]);
+          &tpages[sprite_pools[TID_PLAYER_TEXTURE].texture_id]);
   (*ot_idx)++;
 
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
   AddPrim (&ot[(*ot_idx)],
-           &sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0].sprite);
+           &sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite);
   (*ot_idx)++;
 }

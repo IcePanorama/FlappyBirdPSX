@@ -124,7 +124,7 @@ init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2])
 
   for (i = 0; i < 2; i++)
   {
-    pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid + i);
+    pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TID_PIPES_TEXTURE], pe->u8_eid + i);
 #ifdef DEBUG_BUILD
     assert(pe->psc_sprite_compnts[i] != 0);
 #endif /* DEBUG_BUILD */
@@ -169,7 +169,7 @@ pie_destroy_pipes_entity (PipesEntity_t *pe)
   for (i = 0; i < 2; i++)
   {
     csc_destroy_col_shape (pe->u8_eid + i);
-    destroy_sprite (&sprite_pools[TEXTID_PIPES_TEXTURE], pe->u8_eid + i);
+    destroy_sprite (&sprite_pools[TID_PIPES_TEXTURE], pe->u8_eid + i);
     destroy_physics_compnt (pe->u8_eid + i);
   }
 }

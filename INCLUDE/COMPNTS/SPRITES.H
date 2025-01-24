@@ -14,7 +14,7 @@
 #include "video/textlkup.h"
 
 #define SPRITES_MAX_NUM_SPRITES (32)
-#define SPRITES_NUM_POOLS (TEXTID_NUM_TEXTURES)
+#define SPRITES_NUM_POOLS (TID_NUM_TEXTURES)
 
 typedef struct SpriteCompnt_s
 {
@@ -34,12 +34,6 @@ typedef struct SpritePool_s
 } SpritePool_t;
 
 extern SpritePool_t sprite_pools[(SPRITES_NUM_POOLS)];
-
-/*
-extern SpriteCompnt_t sp_sprite_pool[(SPRITES_MAX_NUM_SPRITES)];
-//FIXME: add type to name
-extern uint8_t sp_num_sprites;
-*/
 
 void sc_init_sprite_compnt_pool (void);
 SpriteCompnt_t *sc_create_new_sprite (SpritePool_t *sp, uint8_t u8_id);

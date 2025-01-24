@@ -14,9 +14,8 @@ sc_init_sprite_compnt_pool (void)
 
   memset (sprite_pools, 0, sizeof (SpritePool_t) * (SPRITES_NUM_POOLS));
 
-//CLUT is incorrect for one of these?
-  sprite_pools[TEXTID_PIPES_TEXTURE].texture_id = TEXTID_PIPES_TEXTURE;
-  sprite_pools[TEXTID_PLAYER_TEXTURE].texture_id = TEXTID_PLAYER_TEXTURE;
+  sprite_pools[TID_PIPES_TEXTURE].texture_id = TID_PIPES_TEXTURE;
+  sprite_pools[TID_PLAYER_TEXTURE].texture_id = TID_PLAYER_TEXTURE;
 
   for (i = 0; i < (SPRITES_NUM_POOLS); i++)
   {

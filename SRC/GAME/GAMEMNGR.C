@@ -6,7 +6,6 @@
 #include "game/colmngr.h"
 #include "game/pipemngr.h"
 #include "game/score.h"
-#include "game/scrwritr.h"
 #include "game/signals.h"
 #include "game_obj/pipes.h"
 #include "game_obj/player.h"
@@ -120,8 +119,8 @@ void
 update_sprites (Vec2_t *v2_input_pos)
 {
   /* Update player sprite */
-  (*sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0].update)(
-    &sprite_pools[TEXTID_PLAYER_TEXTURE].sprites[0], &v2_input_pos[0]);
+  (*sprite_pools[TID_PLAYER_TEXTURE].sprites[0].update)(
+    &sprite_pools[TID_PLAYER_TEXTURE].sprites[0], &v2_input_pos[0]);
 
   update_pipe_sprites(v2_input_pos);
 }
@@ -131,9 +130,9 @@ update_pipe_sprites (Vec2_t *v2_input_pos)
 {
   uint8_t i;
 
-   for (i = 0; i < sprite_pools[TEXTID_PIPES_TEXTURE].u8_num_sprites; i++)
-     (*sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i].update)(
-       &sprite_pools[TEXTID_PIPES_TEXTURE].sprites[i], &v2_input_pos[i + 1]);
+   for (i = 0; i < sprite_pools[TID_PIPES_TEXTURE].u8_num_sprites; i++)
+     (*sprite_pools[TID_PIPES_TEXTURE].sprites[i].update)(
+       &sprite_pools[TID_PIPES_TEXTURE].sprites[i], &v2_input_pos[i + 1]);
 }
 
 void

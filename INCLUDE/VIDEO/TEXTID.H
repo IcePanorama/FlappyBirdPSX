@@ -1,19 +1,15 @@
 #ifndef _TEXTURE_ID_H_
 #define _TEXTURE_ID_H_
 
-// FIXME: prefix should be TID instead of TEXTID
 typedef enum TextureID_e
 {
-  TEXTID_FONT_TEXTURE,
-  TEXTID_PIPES_TEXTURE,
-  TEXTID_BG_TEXTURE,
-  TEXTID_FG_TEXTURE,
-  TEXTID_PLAYER_TEXTURE,
-  TEXTID_UI_TEXTURE
-//TODO: do something similar to this elsewhere where possible.
-#ifdef DEBUG_BUILD
-, TEXTID_NUM_TEXTURES
-#endif /* DEBUG_BUILD */
+  TID_FONT_TEXTURE,
+  TID_PIPES_TEXTURE,
+  TID_BG_TEXTURE,
+  TID_FG_TEXTURE,
+  TID_PLAYER_TEXTURE,
+  TID_UI_TEXTURE,
+  TID_NUM_TEXTURES
 } TextureID_t;
 
 #endif /* _TEXTURE_ID_H_ */
