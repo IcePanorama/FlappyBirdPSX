@@ -26,7 +26,7 @@
 #define GAME_OVER_MSG_Y_POS ((SW_FONT_SPRITE_HEIGHT) * 3)
 #define NEW_HIGH_SCORE_MSG_Y_POS ((SW_FONT_SPRITE_HEIGHT) * 4)
 
-PlayerEntity_t player;
+PlayerEntity_t player = {0};
 
 static void update_physics_compnts (Vec2_t *v2_output_pos);
 static void update_sprites (Vec2_t *v2_input_pos);
@@ -66,8 +66,6 @@ void
 gm_update_game (void)
 {
   GameState_t curr_game_state = gs_get_curr_game_state ();
-  ctrl_handle_user_input (cmdl_command_lists[curr_game_state],
-                          (void *)&player);
 
   if (curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
   {

@@ -27,9 +27,10 @@
 
 #define DIST_TO_SCREEN (512)
 
-static void draw_sprites (u_long *ot, u_long *ot_idx);
-static void draw_player_sprite (u_long *ot, u_long *ot_idx);
+static void draw_sprites (uint32_t u32_delta, u_long *ot, u_long *ot_idx);
+static void draw_player_sprite (uint32_t u32_delta, u_long *ot, u_long *ot_idx);
 static void clear_vram (void);
+static uint32_t helper (uint32_t x);
 
 void
 r_init_renderer (void)
@@ -73,7 +74,7 @@ clear_vram (void)
 }
 
 void
-r_render_screen (void)
+r_render_screen (uint32_t u32_delta)
 {
   u_long ot_idx = 0;
   static ScreenBuffer_t *curr_sb = screen_buffers;
@@ -82,8 +83,8 @@ r_render_screen (void)
   ClearOTag (curr_sb->ordering_table, FB_ORDERING_TABLE_MAX_LENGTH);
 
   ev_draw_background (curr_sb->ordering_table, &ot_idx);
-  draw_sprites (curr_sb->ordering_table, &ot_idx);
-  draw_player_sprite (curr_sb->ordering_table, &ot_idx);
+  draw_sprites (u32_delta, curr_sb->ordering_table, &ot_idx);
+  draw_player_sprite (u32_delta, curr_sb->ordering_table, &ot_idx);
 
   ev_draw_foreground (curr_sb->ordering_table, &ot_idx);
 
@@ -104,9 +105,10 @@ r_render_screen (void)
 }
 
 void
-draw_sprites (u_long *ot, u_long *ot_idx)
+draw_sprites (uint32_t u32_delta, u_long *ot, u_long *ot_idx)
 {
   uint8_t i;
+  uint32_t original_pos;
 
   if (sprite_pools[TID_PIPES_TEXTURE].u8_num_sprites == 0) return;
 
@@ -122,16 +124,20 @@ draw_sprites (u_long *ot, u_long *ot_idx)
 #ifdef DEBUG_BUILD
     assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-    AddPrim(&ot[(*ot_idx)],
-            &sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite);
+    original_pos = sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite.x0;
+    sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite.x0 = (original_pos * u32_delta) >> 12;
+    AddPrim(&ot[(*ot_idx)], &sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite);
+    sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite.x0 = original_pos;
     (*ot_idx)++;
   }
 }
 
 /** Handling player separately so that they're always on top. */
 void
-draw_player_sprite (u_long *ot, u_long *ot_idx)
+draw_player_sprite (uint32_t u32_delta, u_long *ot, u_long *ot_idx)
 {
+  uint32_t pos_times_one;
+  uint32_t original_pos;
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
@@ -142,7 +148,22 @@ draw_player_sprite (u_long *ot, u_long *ot_idx)
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-  AddPrim (&ot[(*ot_idx)],
-           &sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite);
+  original_pos = sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0;
+  pos_times_one = sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0 * (4096);
+  sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0 = (pos_times_one >> (helper (u32_delta)));
+  AddPrim (&ot[(*ot_idx)], &sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite);
+  sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0 = original_pos;
   (*ot_idx)++;
+}
+
+uint32_t
+helper (uint32_t x)
+{
+  uint32_t log = 0;
+  while (x > 1)
+  {
+    x >>= 1;
+    log++;
+  }
+  return log;
 }

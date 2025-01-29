@@ -53,7 +53,7 @@ cm_handle_collisions (void)
       // FIXME: Should this send a signal instead?
       if (csc_detect_collision (player->pcsc_col_shape, csc_pipe))
       {
-        pe_kill_player (player);
+//        pe_kill_player (player);
       }
     }
   }

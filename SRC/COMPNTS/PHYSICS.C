@@ -108,12 +108,12 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
   if (pc->b_use_gravity)
   {
     if (pc->v2_velocity.y > 0)
-       pc->v2_velocity.y -= (1 << FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+       pc->v2_velocity.y -= (1 << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
     else
       pc->v2_velocity.y -= (GRAVITY);
   }
 
-  pc->v2_position.x += pc->v2_velocity.x;
+  pc->v2_position.x += (pc->v2_velocity.x << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
 
   if (s_in_green_area (pc->v2_position.x))
     s_process_scoring (pc->u8_parent_id);

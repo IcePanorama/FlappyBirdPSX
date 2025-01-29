@@ -14,7 +14,7 @@ MAP_FILE=MEM.MAP
 # time.
 all: obj_files
   echo "Building ..\$(CPE_FILE), ..\$(SYM_FILE), and ..\$(MAP_FILE)..."
-  $(CC) -Xo$80020000 BIN\*.OBJ -o$(CPE_FILE),$(SYM_FILE),$(MAP_FILE) -L $(LIBRARY_PATH) -llibpad -llibc2 -llibcd
+  $(CC) -Xo$80020000 BIN\*.OBJ -o$(CPE_FILE),$(SYM_FILE),$(MAP_FILE) -L $(LIBRARY_PATH) -llibetc -llibpad -llibc2 -llibcd
   echo "Building \$(CPE_FILE)."
   cpe2x /ca $(CPE_FILE)
 
