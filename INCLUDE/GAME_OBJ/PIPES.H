@@ -31,7 +31,6 @@ typedef struct PipesEntity_s
 
 PipesEntity_t pie_create_pipes_entity (void);
 void pie_destroy_pipes_entity (PipesEntity_t *pe);
-void pie_update_pipes_sprite_xy (struct SpriteCompnt_s *sc, Vec2_t *v2_pos);
 //FIXME: remove? unused.
 bool_t pie_should_be_destroyed (PipesEntity_t *pe);
 

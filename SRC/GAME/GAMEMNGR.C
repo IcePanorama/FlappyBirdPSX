@@ -26,11 +26,10 @@
 #define GAME_OVER_MSG_Y_POS ((SW_FONT_SPRITE_HEIGHT) * 3)
 #define NEW_HIGH_SCORE_MSG_Y_POS ((SW_FONT_SPRITE_HEIGHT) * 4)
 
-PlayerEntity_t player = {0};
+PlayerEntity_t player;
 
 static void update_physics_compnts (Vec2_t *v2_output_pos);
 static void update_sprites (Vec2_t *v2_input_pos);
-static void update_pipe_sprites (Vec2_t *v2_input_pos);
 static void update_col_shapes (Vec2_t *v2_input_pos);
 static void init_compnt_pools (void);
 static void normal_update (void);
@@ -66,6 +65,8 @@ void
 gm_update_game (void)
 {
   GameState_t curr_game_state = gs_get_curr_game_state ();
+  ctrl_handle_user_input (cmdl_command_lists[curr_game_state],
+                          (void *)&player);
 
   if (curr_game_state == GSTATE_NORMAL && !pe_is_alive(&player))
   {
@@ -94,14 +95,14 @@ normal_update (void)
 {
   static Vec2_t v2_entity_pos[MAX_NUM_ENTITIES] = {{0}};
 
-  pm_manage_pipes ();
+  cm_handle_collisions ();
   pe_update_player (&player);
 
-  cm_handle_collisions ();
+  pm_manage_pipes ();
+
   update_physics_compnts (v2_entity_pos);
-  ev_scroll_background ();
-  update_sprites (v2_entity_pos);
   update_col_shapes (v2_entity_pos);
+  update_sprites (v2_entity_pos);
 }
 
 void
@@ -116,21 +117,11 @@ update_physics_compnts (Vec2_t *v2_output_pos)
 void
 update_sprites (Vec2_t *v2_input_pos)
 {
-  /* Update player sprite */
-  (*sprite_pools[TID_PLAYER_TEXTURE].sprites[0].update)(
-    &sprite_pools[TID_PLAYER_TEXTURE].sprites[0], &v2_input_pos[0]);
-
-  update_pipe_sprites(v2_input_pos);
-}
-
-void
-update_pipe_sprites (Vec2_t *v2_input_pos)
-{
   uint8_t i;
 
-   for (i = 0; i < sprite_pools[TID_PIPES_TEXTURE].u8_num_sprites; i++)
-     (*sprite_pools[TID_PIPES_TEXTURE].sprites[i].update)(
-       &sprite_pools[TID_PIPES_TEXTURE].sprites[i], &v2_input_pos[i + 1]);
+   for (i = 0; i < sprite_pools[TID_GAME_OBJ_TEXTURE].u8_num_sprites; i++)
+     sc_update_sprite_xy (&sprite_pools[TID_GAME_OBJ_TEXTURE].sprites[i],
+                          &v2_input_pos[i]);
 }
 
 void

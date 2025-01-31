@@ -9,6 +9,7 @@
 #include <libetc.h>
 /******************/
 
+#include "sys/fb_bools.h"
 #include "sys/fb_ints.h"
 #include "sys/fb_vecs.h"
 #include "video/textlkup.h"
@@ -22,8 +23,10 @@ typedef struct SpriteCompnt_s
   SPRT sprite;
   uint8_t u8_width;
   uint8_t u8_height;
-  // Sprite update xy coordinates function
-  void (* update)(struct SpriteCompnt_s *s, Vec2_t *v2_pos);
+/*
+  bool_t is_animated;
+  uint8_t u8_num_anim_frames;
+*/
 } SpriteCompnt_t;
 
 typedef struct SpritePool_s
@@ -39,5 +42,6 @@ void sc_init_sprite_compnt_pool (void);
 SpriteCompnt_t *sc_create_new_sprite (SpritePool_t *sp, uint8_t u8_id);
 void destroy_sprite (SpritePool_t *sp, uint8_t u8_id);
 SpriteCompnt_t *get_sprite_with_id (SpritePool_t *sp, uint8_t u8_id);
+void sc_update_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos);
 
 #endif /* _SPRITE_COMPONENT_H_ */

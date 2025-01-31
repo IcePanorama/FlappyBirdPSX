@@ -35,26 +35,21 @@ pm_init_pipe_manager (void)
 void
 pm_manage_pipes (void)
 {
-  /*
-   *  FIXME: should `GetRCnt` be called after `manage_pipe_entities`?
-   *  probably doesn't matter, but its worth considering!
-   */
-  uint16_t u16_curr_time = (GetRCnt (RCntCNT2) & 0xFFFF);
   static uint32_t u32_counter = 0;
   static uint16_t u16_last_time = 0;
+  uint16_t u16_curr_time = (GetRCnt (RCntCNT2) & 0xFFFF);
 
   manage_pipe_entities ();
 
   /* Our counter has reset. */
-  if (u16_last_time > u16_curr_time) u32_counter++;
+  if (u16_curr_time < u16_last_time) u32_counter++;
   u16_last_time = u16_curr_time;
 
-  if (u32_counter <= 10)
-    return;
-
-  pm_spawn_pipe_entity ();
-
-  u32_counter = 0;
+  if (u32_counter > 8)
+  {
+    pm_spawn_pipe_entity ();
+    u32_counter = 0;
+  }
 }
 
 void

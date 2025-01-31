@@ -19,8 +19,10 @@
 #define HALF_GAP_SIZE (35)
 #define PIPE_HEAD_SIZE (15)
 
-#define RAND_ORIGIN_MIN (-(FB_HALF_SCREEN_HEIGHT) + (HALF_GAP_SIZE) + ((PIPE_HEAD_SIZE) << 1))
-#define RAND_ORIGIN_MAX ((FB_HALF_SCREEN_HEIGHT) - (FB_FOREGROUND_HEIGHT) - (HALF_GAP_SIZE) - (PIPE_HEAD_SIZE))
+#define RAND_ORIGIN_MIN   \
+  (-(FB_HALF_SCREEN_HEIGHT) + (HALF_GAP_SIZE) + ((PIPE_HEAD_SIZE) << 1))
+#define RAND_ORIGIN_MAX   \
+  ((FB_HALF_SCREEN_HEIGHT) - (FB_FOREGROUND_HEIGHT) - (HALF_GAP_SIZE) - (PIPE_HEAD_SIZE))
 #define RAND_ORIGIN_RANGE ((RAND_ORIGIN_MAX) - (RAND_ORIGIN_MIN) + 1)
 
 #define OFF_SCREEN (\
@@ -50,17 +52,15 @@ pie_create_pipes_entity (void)
   init_pipes_physics_compnts (&pe, v2_pos, u16_heights);
 
   init_pipes_sprite_compnts (&pe, u16_heights);
-  for (i = 0; i < 2; i++)
-  {
-    pie_update_pipes_sprite_xy (pe.psc_sprite_compnts[i], &v2_pos[i]);
-    pe.psc_sprite_compnts[i] = 0;
-  }
 
   for (i = 0; i < 2; i++)
   {
+    sc_update_sprite_xy (pe.psc_sprite_compnts[i], &v2_pos[i]);
+    pe.psc_sprite_compnts[i] = 0;  // set this to NULL when we're done w/ it.
+
     pe.pcsc_col_shape_compnts[i] =
       csc_create_new_col_shape (pe.u8_eid + i, (PIE_PIPE_WIDTH),
-                                u16_heights[i]);
+      u16_heights[i]);
     csc_update_col_shape (pe.pcsc_col_shape_compnts[i], &v2_pos[i]);
     pe.pcsc_col_shape_compnts[i] = 0;
   }
@@ -94,7 +94,8 @@ init_pipes_physics_compnts (PipesEntity_t *pe, Vec2_t v2_out_pos[2],
   }
 
   u16_heights[0] = (pe->v2_origin.y - (HALF_GAP_SIZE)) + ((FB_HALF_SCREEN_HEIGHT));
-  u16_heights[1] = ((FB_HALF_SCREEN_HEIGHT)) - (pe->v2_origin.y + (HALF_GAP_SIZE));
+  u16_heights[1] =
+    (FB_HALF_SCREEN_HEIGHT) - (pe->v2_origin.y + (HALF_GAP_SIZE)) - ((FB_FOREGROUND_HEIGHT) - 1);
 
   /* Calculate top pipe's y pos. */
   pe->ppc_physics_compnts[0]->v2_position.y =
@@ -124,7 +125,8 @@ init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2])
 
   for (i = 0; i < 2; i++)
   {
-    pe->psc_sprite_compnts[i] = sc_create_new_sprite (&sprite_pools[TID_PIPES_TEXTURE], pe->u8_eid + i);
+    pe->psc_sprite_compnts[i] =
+      sc_create_new_sprite (&sprite_pools[TID_GAME_OBJ_TEXTURE], pe->u8_eid + i);
 #ifdef DEBUG_BUILD
     assert(pe->psc_sprite_compnts[i] != 0);
 #endif /* DEBUG_BUILD */
@@ -139,27 +141,8 @@ init_pipes_sprite_compnts (PipesEntity_t *pe, uint16_t u16_heights[2])
     pe->psc_sprite_compnts[i]->u8_height = u16_heights[i];
 
     setWH(&pe->psc_sprite_compnts[i]->sprite, (PIE_PIPE_WIDTH), u16_heights[i]);
-
-    pe->psc_sprite_compnts[i]->update = pie_update_pipes_sprite_xy;
+    pe->psc_sprite_compnts[i] = 0;  // set this to NULL when we're done w/ it.
   }
-}
-
-void
-pie_update_pipes_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
-{
-  Vec2_t v2_cs_pos;  // camera-space position
-  uint16_t u16_left_x;
-  uint16_t u16_top_y;
-
-  if (sc == 0 || v2_pos == 0)
-    return;
-
-  v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
-
-  u16_left_x  = v2_cs_pos.x - (PIE_HALF_PIPE_WIDTH);
-  u16_top_y   = v2_cs_pos.y - (sc->u8_height >> 1);
-
-  setXY0(&sc->sprite, u16_left_x, u16_top_y);
 }
 
 void
@@ -169,7 +152,7 @@ pie_destroy_pipes_entity (PipesEntity_t *pe)
   for (i = 0; i < 2; i++)
   {
     csc_destroy_col_shape (pe->u8_eid + i);
-    destroy_sprite (&sprite_pools[TID_PIPES_TEXTURE], pe->u8_eid + i);
+    destroy_sprite (&sprite_pools[TID_GAME_OBJ_TEXTURE], pe->u8_eid + i);
     destroy_physics_compnt (pe->u8_eid + i);
   }
 }

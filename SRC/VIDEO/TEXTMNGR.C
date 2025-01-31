@@ -17,7 +17,7 @@
 #define TPAGE_STARTING_Y_VALUE (0)
 #define TPAGE_HEIGHT (256)
 
-#define FILE_MAX_NUM_SECTORS (40)
+#define FILE_MAX_NUM_SECTORS (25)
 #define FILE_MAX_SIZE_BYTES ((FILE_MAX_NUM_SECTORS) << 11)
 
 #define VRAM_WIDTH (1024)
@@ -88,6 +88,7 @@ load_texture (const char *path)
    */
 #ifdef DEBUG_BUILD
   assert(CdSearchFile (&fptr, (char *)path) != 0);
+//  printf("Size: %ld\n", fptr.size);
   assert(fptr.size <= (FILE_MAX_SIZE_BYTES));
   assert(CdControlB (CdlSetloc, (u_char *)&fptr.pos, 0) != 0);
   assert(CdRead ((FILE_MAX_NUM_SECTORS), sprite_data, CdlModeSpeed) != 0);

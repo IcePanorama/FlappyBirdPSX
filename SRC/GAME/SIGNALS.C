@@ -5,7 +5,7 @@
   #include <stdio.h>
 #endif /* DEBUG_BUILD */
 
-#define MAX_NUM_SIG_INBOXES (255)
+#define MAX_NUM_SIG_INBOXES (256)
 
 Signal_t sig_inboxes[(MAX_NUM_SIG_INBOXES)];
 

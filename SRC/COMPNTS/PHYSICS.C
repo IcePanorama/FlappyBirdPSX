@@ -12,14 +12,12 @@
 
 /** For position-related signals. */
 #define BUFFER_ZONE_SIZE (64) // No sprite should be larger than 64x64.
-#define BELOW_SCREEN_Y \
-  ((((FB_HALF_SCREEN_HEIGHT)) + (BUFFER_ZONE_SIZE)) \
-  << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
-#define ABOVE_SCREEN_Y (-(BELOW_SCREEN_Y))
+#define BELOW_SCREEN_Y   \
+  ((((FB_HALF_SCREEN_HEIGHT) - ((FB_FOREGROUND_HEIGHT) + (FB_PLAYER_SIZE >> 1)))) << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+#define ABOVE_SCREEN_Y   (-(BELOW_SCREEN_Y))
 #define OFF_SCREEN_RIGHT \
-  ((((FB_HALF_SCREEN_WIDTH)) + (BUFFER_ZONE_SIZE)) \
-  << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
-#define OFF_SCREEN_LEFT (-(OFF_SCREEN_RIGHT))
+  ((((FB_HALF_SCREEN_WIDTH)) + (BUFFER_ZONE_SIZE)) << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS))
+#define OFF_SCREEN_LEFT  (-(OFF_SCREEN_RIGHT))
 /**********************************/
 
 PhysicsCompnt_t pc_physics_pool[(PHYSICS_MAX_NUM_PHYSICS_COMP)];// = {{0}};
@@ -108,12 +106,12 @@ update_physics_compnt (PhysicsCompnt_t *pc, Vec2_t *v2_output_pos)
   if (pc->b_use_gravity)
   {
     if (pc->v2_velocity.y > 0)
-       pc->v2_velocity.y -= (1 << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
+       pc->v2_velocity.y -= (1 << FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
     else
       pc->v2_velocity.y -= (GRAVITY);
   }
 
-  pc->v2_position.x += (pc->v2_velocity.x << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS));
+  pc->v2_position.x += pc->v2_velocity.x;
 
   if (s_in_green_area (pc->v2_position.x))
     s_process_scoring (pc->u8_parent_id);

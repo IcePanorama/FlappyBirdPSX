@@ -10,6 +10,7 @@
 #include "compnts/sprites.h"
 #include "compnts/wiframe.h"
 #include "game/gamemngr.h"
+#include "game/gmstate.h"
 #include "game_obj/entityid.h"
 #include "game_obj/pipes.h"
 #include "sys/fb_ints.h"
@@ -27,10 +28,10 @@
 
 #define DIST_TO_SCREEN (512)
 
-static void draw_sprites (uint32_t u32_delta, u_long *ot, u_long *ot_idx);
-static void draw_player_sprite (uint32_t u32_delta, u_long *ot, u_long *ot_idx);
+static void draw_sprites (u_long *ot, u_long *ot_idx);
+static void draw_player_sprite (u_long *ot, u_long *ot_idx);
 static void clear_vram (void);
-static uint32_t helper (uint32_t x);
+static void animate_sprites (void);
 
 void
 r_init_renderer (void)
@@ -74,29 +75,37 @@ clear_vram (void)
 }
 
 void
-r_render_screen (uint32_t u32_delta)
+r_render_screen (void)
 {
   u_long ot_idx = 0;
   static ScreenBuffer_t *curr_sb = screen_buffers;
+  GameState_t curr_gstate = gs_get_curr_game_state ();
 
   curr_sb = (curr_sb == screen_buffers) ? screen_buffers + 1 : screen_buffers;
   ClearOTag (curr_sb->ordering_table, FB_ORDERING_TABLE_MAX_LENGTH);
 
-  ev_draw_background (curr_sb->ordering_table, &ot_idx);
-  draw_sprites (u32_delta, curr_sb->ordering_table, &ot_idx);
-  draw_player_sprite (u32_delta, curr_sb->ordering_table, &ot_idx);
+  if ((curr_gstate != GSTATE_GAME_PAUSED) && (curr_gstate != GSTATE_GAME_OVER))
+    animate_sprites ();
 
-  ev_draw_foreground (curr_sb->ordering_table, &ot_idx);
+  ev_draw_environment (curr_sb->ordering_table, &ot_idx);
+
+#ifdef DEBUG_BUILD
+  assert(ot_idx < (FB_ORDERING_TABLE_MAX_LENGTH));
+#endif /* DEBUG_BUILD */
+  AddPrim(&curr_sb->ordering_table[ot_idx],
+          &tpages[sprite_pools[TID_GAME_OBJ_TEXTURE].texture_id]);
+  ot_idx++;
+
+  draw_sprites (curr_sb->ordering_table, &ot_idx);
+  draw_player_sprite (curr_sb->ordering_table, &ot_idx);
 
   ui_draw_ui_elements (curr_sb->ordering_table, &ot_idx);
 
-  DrawSync (0);
+  while (DrawSync (1)) {}
   VSync (0);
 
   PutDrawEnv (&curr_sb->draw_env);
   PutDispEnv (&curr_sb->disp_env);
-
-  ClearImage (&curr_sb->draw_env.clip, 0, 0, 0);
 
 //  DumpOTag (curr_sb->ordering_table);
   DrawOTag (curr_sb->ordering_table);
@@ -105,65 +114,42 @@ r_render_screen (uint32_t u32_delta)
 }
 
 void
-draw_sprites (uint32_t u32_delta, u_long *ot, u_long *ot_idx)
+draw_sprites (u_long *ot, u_long *ot_idx)
 {
   uint8_t i;
-  uint32_t original_pos;
 
-  if (sprite_pools[TID_PIPES_TEXTURE].u8_num_sprites == 0) return;
-
-#ifdef DEBUG_BUILD
-  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
-#endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)],
-          &tpages[sprite_pools[TID_PIPES_TEXTURE].texture_id]);
-  (*ot_idx)++;
-
-  for (i = 0; i < sprite_pools[TID_PIPES_TEXTURE].u8_num_sprites; i++)
+  for (i = 1; i < sprite_pools[TID_GAME_OBJ_TEXTURE].u8_num_sprites; i++)
   {
 #ifdef DEBUG_BUILD
     assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-    original_pos = sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite.x0;
-    sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite.x0 = (original_pos * u32_delta) >> 12;
-    AddPrim(&ot[(*ot_idx)], &sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite);
-    sprite_pools[TID_PIPES_TEXTURE].sprites[i].sprite.x0 = original_pos;
+    AddPrim(&ot[(*ot_idx)],
+            &sprite_pools[TID_GAME_OBJ_TEXTURE].sprites[i].sprite);
     (*ot_idx)++;
   }
 }
 
 /** Handling player separately so that they're always on top. */
 void
-draw_player_sprite (uint32_t u32_delta, u_long *ot, u_long *ot_idx)
+draw_player_sprite (u_long *ot, u_long *ot_idx)
 {
-  uint32_t pos_times_one;
-  uint32_t original_pos;
 #ifdef DEBUG_BUILD
   assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)],
-          &tpages[sprite_pools[TID_PLAYER_TEXTURE].texture_id]);
-  (*ot_idx)++;
-
-#ifdef DEBUG_BUILD
-  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
-#endif /* DEBUG_BUILD */
-  original_pos = sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0;
-  pos_times_one = sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0 * (4096);
-  sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0 = (pos_times_one >> (helper (u32_delta)));
-  AddPrim (&ot[(*ot_idx)], &sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite);
-  sprite_pools[TID_PLAYER_TEXTURE].sprites[0].sprite.y0 = original_pos;
+  AddPrim (&ot[(*ot_idx)],
+           &sprite_pools[TID_GAME_OBJ_TEXTURE].sprites[0].sprite);
   (*ot_idx)++;
 }
 
-uint32_t
-helper (uint32_t x)
+void
+animate_sprites (void)
 {
-  uint32_t log = 0;
-  while (x > 1)
+  static uint8_t u8_num_calls = 0;
+  ev_scroll_environment ();
+
+  if ((++u8_num_calls) % 20 == 0)
   {
-    x >>= 1;
-    log++;
+    sprite_pools[TID_GAME_OBJ_TEXTURE].sprites[0].sprite.u0 =
+      (u8_num_calls / 20 % 4) * 20;
   }
-  return log;
 }

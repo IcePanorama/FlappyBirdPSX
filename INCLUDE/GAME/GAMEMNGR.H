@@ -1,10 +1,6 @@
 #ifndef _GAME_MANAGER_H_
 #define _GAME_MANAGER_H_
 
-#include "game_obj/player.h"
-
-extern PlayerEntity_t player;
-
 void gm_init_game (void);
 void gm_update_game (void);
 void gm_destroy_game (void);

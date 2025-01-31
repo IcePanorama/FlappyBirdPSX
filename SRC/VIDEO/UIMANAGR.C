@@ -32,6 +32,11 @@
 #define GAME_OVER_GRAPHIC_V0     (64)
 /****************************/
 
+/* 'Get Ready!' Graphic Defines */
+#define GET_READY_GRAPHIC_V0     (128)
+#define GET_READY_GRAPHIC_Y_POS  ((GAME_OVER_GRAPHIC_Y_POS) + 5)
+/********************************/
+
 /* Game Over Score Box Defines */
 #define GAME_OVER_SCORE_BOX_WIDTH  (128)
 #define GAME_OVER_SCORE_BOX_HEIGHT (64)
@@ -43,14 +48,22 @@
 /*******************************/
 
 /* Gold and Silver Medal Defines */
-#define MEDAL_SIZE      (32)
-#define MEDAL_WIDTH     ((MEDAL_SIZE))
-#define MEDAL_HEIGHT    ((MEDAL_SIZE))
-#define MEDAL_X_POS     ((GAME_OVER_SCORE_BOX_X_POS) + 10)
-#define MEDAL_Y_POS     (((FB_SCREEN_HEIGHT) >> 1) - ((MEDAL_HEIGHT) >> 1))
-#define SILVER_MEDAL_V0 (96)
-#define GOLD_MEDAL_V0   (128)
+#define MEDAL_SIZE    (32)
+#define MEDAL_WIDTH   ((MEDAL_SIZE))
+#define MEDAL_HEIGHT  ((MEDAL_SIZE))
+#define MEDAL_X_POS   ((GAME_OVER_SCORE_BOX_X_POS) + 10)
+#define MEDAL_Y_POS   (((FB_SCREEN_HEIGHT) >> 1) - ((MEDAL_HEIGHT) >> 1))
+#define MEDALS_V0     (96)
+#define GOLD_MEDAL_U0 (32)
 /*********************************/
+
+/* Tutorial Graphic Defines */
+#define TUTO_GRAPHIC_WIDTH  (64)
+#define TUTO_GRAPHIC_HEIGHT (32)
+#define TUTO_GRAPHIC_X_POS  (((FB_SCREEN_WIDTH) >> 1) - ((TUTO_GRAPHIC_WIDTH) >> 1))
+#define TUTO_GRAPHIC_Y_POS  ((GAME_OVER_SCORE_BOX_Y_POS) + (GAME_OVER_SCORE_BOX_HEIGHT) + ((TUTO_GRAPHIC_HEIGHT) >> 1))
+#define TUTO_GRAPHIC_V0     (160)
+/****************************/
 
 /* Score Text Defines */
 #define SCORE_MAX_NUM_DIGITS (3)
@@ -88,6 +101,8 @@ static SPRT s_game_over_graphic   = {0};
 static SPRT s_game_over_score_box = {0};
 static SPRT s_silver_medal        = {0};
 static SPRT s_gold_medal          = {0};
+static SPRT s_get_ready_graphic   = {0};
+static SPRT s_tutorial_graphic   = {0};
 
 static SPRT s_score_normal_text[(SCORE_MAX_NUM_DIGITS)]    = {{0}};
 static SPRT s_score_game_over_text[(SCORE_MAX_NUM_DIGITS)] = {{0}};
@@ -101,6 +116,7 @@ static void init_ui_element (SPRT* sptr_element, const uint16_t u16_width,
                              const uint16_t u16_y0, const uint16_t u16_v0);
 static void init_score_text_element (SPRT* sptr_element);
 static void draw_ui_game_over (u_long *ot, u_long *ot_idx);
+static void draw_ui_game_start (u_long *ot, u_long *ot_idx);
 static void draw_ui_normal (u_long *ot, u_long *ot_idx);
 static void draw_ui_score_text (u_long *ot, u_long *ot_idx,
                                 SPRT *sptr_score_text);
@@ -118,13 +134,21 @@ ui_init_ui_elements (void)
   init_ui_element (&s_game_over_graphic, (GAME_OVER_GRAPHIC_WIDTH),
                    (GAME_OVER_GRAPHIC_HEIGHT), (GAME_OVER_GRAPHIC_X_POS),
                    (GAME_OVER_GRAPHIC_Y_POS), (GAME_OVER_GRAPHIC_V0));
+  init_ui_element (&s_get_ready_graphic, (GAME_OVER_GRAPHIC_WIDTH),
+                   (GAME_OVER_GRAPHIC_HEIGHT), (GAME_OVER_GRAPHIC_X_POS),
+                   (GET_READY_GRAPHIC_Y_POS), (GET_READY_GRAPHIC_V0));
+  init_ui_element (&s_tutorial_graphic, (TUTO_GRAPHIC_WIDTH),
+                   (TUTO_GRAPHIC_WIDTH), (TUTO_GRAPHIC_X_POS),
+                   (TUTO_GRAPHIC_Y_POS), (TUTO_GRAPHIC_V0));
   init_ui_element (&s_game_over_score_box, (GAME_OVER_SCORE_BOX_WIDTH),
                    (GAME_OVER_SCORE_BOX_HEIGHT), (GAME_OVER_SCORE_BOX_X_POS),
                    (GAME_OVER_SCORE_BOX_Y_POS), (GAME_OVER_SCORE_BOX_V0));
   init_ui_element (&s_silver_medal, (MEDAL_WIDTH), (MEDAL_HEIGHT),
-                   (MEDAL_X_POS), (MEDAL_Y_POS), (SILVER_MEDAL_V0));
+                   (MEDAL_X_POS), (MEDAL_Y_POS), (MEDALS_V0));
   init_ui_element (&s_gold_medal, (MEDAL_WIDTH), (MEDAL_HEIGHT), (MEDAL_X_POS),
-                   (MEDAL_Y_POS), (GOLD_MEDAL_V0));
+                   (MEDAL_Y_POS), (MEDALS_V0));
+
+  s_gold_medal.u0 = (GOLD_MEDAL_U0);
 
   memset (s_score_normal_text, 0, sizeof (SPRT) * (SCORE_MAX_NUM_DIGITS));
   memset (s_score_game_over_text, 0, sizeof (SPRT) * (SCORE_MAX_NUM_DIGITS));
@@ -179,9 +203,17 @@ init_score_text_element (SPRT* sptr_element)
 void
 ui_draw_ui_elements (u_long *ot, u_long *ot_idx)
 {
+#ifdef DEBUG_BUILD
+  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
+#endif /* DEBUG_BUILD */
+  AddPrim(&ot[(*ot_idx)], &tpages[TID_UI_TEXTURE]);
+  (*ot_idx)++;
+
   switch (gs_get_curr_game_state ())
   {
     case GSTATE_GAME_START:
+      draw_ui_game_start (ot, ot_idx);
+      break;
     case GSTATE_NORMAL:
       draw_ui_normal (ot, ot_idx);
       break;
@@ -191,6 +223,13 @@ ui_draw_ui_elements (u_long *ot, u_long *ot_idx)
     default:
       break;
   }
+}
+
+void
+draw_ui_game_start (u_long *ot, u_long *ot_idx)
+{
+  draw_ui_element(ot, ot_idx, &s_get_ready_graphic);
+  draw_ui_element(ot, ot_idx, &s_tutorial_graphic);
 }
 
 void
@@ -244,12 +283,6 @@ draw_ui_high_score_text (u_long *ot, u_long *ot_idx, SPRT *sptr_score_text)
 void
 draw_ui_game_over (u_long *ot, u_long *ot_idx)
 {
-#ifdef DEBUG_BUILD
-  assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
-#endif /* DEBUG_BUILD */
-  AddPrim(&ot[(*ot_idx)], &tpages[TID_UI_TEXTURE]);
-  (*ot_idx)++;
-
   draw_ui_element(ot, ot_idx,   &s_game_over_graphic);
   draw_ui_element(ot, ot_idx, &s_game_over_score_box);
 

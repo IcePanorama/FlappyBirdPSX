@@ -22,7 +22,6 @@ typedef struct PlayerEntity_s
 
 PlayerEntity_t pe_create_player_entity (void);
 void pe_destroy_player_entity (PlayerEntity_t *pe);
-void pe_update_player_sprite_xy (struct SpriteCompnt_s *sc, Vec2_t *v2_pos);
 void pe_make_player_jump (void *e); // voidptr for command pattern
 void pe_kill_player (PlayerEntity_t *pe);
 void pe_update_player (PlayerEntity_t *pe);

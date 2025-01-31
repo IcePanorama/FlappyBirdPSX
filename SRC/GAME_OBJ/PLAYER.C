@@ -14,7 +14,7 @@
   #include <assert.h>
 #endif /* DEBUG_BUILD */
 
-#define PLAYER_SIZE (20)
+#define PLAYER_SIZE (FB_PLAYER_SIZE)
 #define PLAYER_JUMP_VELOCITY (256)
 
 /* Player Flags */
@@ -40,7 +40,7 @@ pe_create_player_entity (void)
   init_player_physics_compnt (&pe, &v2_pos);
 
   init_player_sprite_compnt (&pe);
-  pe_update_player_sprite_xy (pe.psc_sprite_compnt, &v2_pos);
+  sc_update_sprite_xy (pe.psc_sprite_compnt, &v2_pos);
   pe.psc_sprite_compnt = 0;  // set this to NULL when we're done w/ it.
 
   pe.pcsc_col_shape =
@@ -50,7 +50,6 @@ pe_create_player_entity (void)
   return pe;
 }
 
-//TODO: make macro version of this function.
 void
 init_player_physics_compnt (PlayerEntity_t *pe, Vec2_t *v2_output_pos)
 {
@@ -69,12 +68,11 @@ init_player_physics_compnt (PlayerEntity_t *pe, Vec2_t *v2_output_pos)
   pe->ppc_physics_compnt = 0; // set this to NULL when we're done w/ it.
 }
 
-//TODO: make macro version of this function.
 void
 init_player_sprite_compnt (PlayerEntity_t *pe)
 {
   pe->psc_sprite_compnt =
-    sc_create_new_sprite (&sprite_pools[TID_PLAYER_TEXTURE], pe->u8_eid);
+    sc_create_new_sprite (&sprite_pools[TID_GAME_OBJ_TEXTURE], pe->u8_eid);
 #ifdef DEBUG_BUILD
   assert(pe->psc_sprite_compnt != 0);
 #endif /* DEBUG_BUILD */
@@ -83,38 +81,7 @@ init_player_sprite_compnt (PlayerEntity_t *pe)
   pe->psc_sprite_compnt->u8_height = pe->u8_height;
 
   setWH(&pe->psc_sprite_compnt->sprite, pe->u8_width, pe->u8_height);
-  setUV0(&pe->psc_sprite_compnt->sprite, 0, 0);
-
-  pe->psc_sprite_compnt->update = pe_update_player_sprite_xy;
-}
-
-/*
- *  FIXME: Sprites probably don't need func ptrs anymore, make this a func in
- *  sprite compnt file.
- */
-void
-pe_update_player_sprite_xy (SpriteCompnt_t *sc, Vec2_t *v2_pos)
-{
-  Vec2_t v2_cs_pos;  // camera-space position
-  static uint8_t u8_num_calls = 0;
-  static uint16_t u16_u0 = 0;
-
-  if (sc == 0 || v2_pos == 0)
-    return;
-
-  v2_convert_world_space_to_camera_space (v2_pos, &v2_cs_pos);
-  setXY0(&sc->sprite, v2_cs_pos.x - (sc->u8_width >> 1),
-         v2_cs_pos.y - (sc->u8_height >> 1));
-
-  /* Play wings flappying animation. */
-  if (u8_num_calls % 20 == 0)
-  {
-    u16_u0 += (PLAYER_SIZE);
-    u16_u0 %= (PLAYER_SIZE) * 3;
-    setUV0(&sc->sprite, u16_u0, 0);
-  }
-
-  u8_num_calls++;
+  setUV0(&pe->psc_sprite_compnt->sprite, 0, 128);
 }
 
 void
@@ -132,7 +99,7 @@ pe_destroy_player_entity (PlayerEntity_t *pe)
   if (pe == 0 || (pe->u8_flags & (1 << (FL_DESTROYED)))) return;
 
   csc_destroy_col_shape (pe->u8_eid);
-  destroy_sprite (&sprite_pools[TID_PLAYER_TEXTURE], pe->u8_eid);
+  destroy_sprite (&sprite_pools[TID_GAME_OBJ_TEXTURE], pe->u8_eid);
   destroy_physics_compnt (pe->u8_eid);
 
   pe->u8_flags |= (1 << (FL_DESTROYED));

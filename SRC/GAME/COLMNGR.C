@@ -53,7 +53,7 @@ cm_handle_collisions (void)
       // FIXME: Should this send a signal instead?
       if (csc_detect_collision (player->pcsc_col_shape, csc_pipe))
       {
-//        pe_kill_player (player);
+        pe_kill_player (player);
       }
     }
   }
@@ -62,7 +62,8 @@ cm_handle_collisions (void)
 bool_t
 x_pos_in_red_zone (int16_t x)
 {
-  const int16_t i16_RED_ZONE_X = ((player->u8_width >> 1) + (PIE_HALF_PIPE_WIDTH)) << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
+  const int16_t i16_RED_ZONE_X =
+    ((player->u8_width >> 1) + (PIE_HALF_PIPE_WIDTH)) << (FB_WORLD_TO_CAMERA_SPACE_NUM_SHIFTS);
 
   return -i16_RED_ZONE_X < x && x < i16_RED_ZONE_X;
 }
