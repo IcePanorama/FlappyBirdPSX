@@ -1,7 +1,6 @@
 CC=ccpsx
  
-CFLAGS=-O3 -ansi -Wall -Werror -pedantic-errors -Wshadow -DDEBUG_BUILD
-#CFLAGS=-ansi -Wall -Werror -pedantic-errors -Wshadow -DDEBUG_BUILD
+CFLAGS=-O3 -ansi -Wall -Werror -pedantic-errors -Wshadow
 
 SRC_DIR=SRC
 INCL_DIR=INCLUDE

@@ -108,6 +108,8 @@ static SPRT s_score_normal_text[(SCORE_MAX_NUM_DIGITS)]    = {{0}};
 static SPRT s_score_game_over_text[(SCORE_MAX_NUM_DIGITS)] = {{0}};
 static SPRT s_high_score_text[(SCORE_MAX_NUM_DIGITS)]      = {{0}};
 
+static POLY_F4 pf4_pause_overlay = {0};
+
 static uint8_t u8_num_digits            = 1;
 static uint8_t u8_high_score_num_digits = 1;
 
@@ -118,6 +120,7 @@ static void init_score_text_element (SPRT* sptr_element);
 static void draw_ui_game_over (u_long *ot, u_long *ot_idx);
 static void draw_ui_game_start (u_long *ot, u_long *ot_idx);
 static void draw_ui_normal (u_long *ot, u_long *ot_idx);
+static void draw_ui_game_paused (u_long *ot, u_long *ot_idx);
 static void draw_ui_score_text (u_long *ot, u_long *ot_idx,
                                 SPRT *sptr_score_text);
 static void draw_ui_high_score_text (u_long *ot, u_long *ot_idx,
@@ -177,6 +180,12 @@ ui_init_ui_elements (void)
   }
 
   u8_num_digits = 1;
+
+  SetPolyF4 (&pf4_pause_overlay);
+  setRGB0 (&pf4_pause_overlay, 0, 0, 0);
+  SetSemiTrans (&pf4_pause_overlay, 1);
+  SetShadeTex (&pf4_pause_overlay, 1);
+  setXYWH (&pf4_pause_overlay, 0, 0, (FB_SCREEN_WIDTH), (FB_SCREEN_HEIGHT));
 }
 
 void
@@ -220,6 +229,9 @@ ui_draw_ui_elements (u_long *ot, u_long *ot_idx)
     case GSTATE_GAME_OVER:
       draw_ui_game_over (ot, ot_idx);
       break;
+    case GSTATE_GAME_PAUSED:
+      draw_ui_game_paused (ot, ot_idx);
+      break;
     default:
       break;
   }
@@ -236,7 +248,6 @@ void
 draw_ui_normal (u_long *ot, u_long *ot_idx)
 {
   add_font_tpage_to_ot (ot, ot_idx);
-
   draw_ui_score_text (ot, ot_idx, s_score_normal_text);
 }
 
@@ -434,4 +445,14 @@ ui_update_high_score_text (uint16_t u16_high_score)
       (u16_high_score_cpy % 10) * (SCORE_TEXT_GAME_OVER_WIDTH);
     u16_high_score_cpy /= 10;
   }
+}
+
+void
+draw_ui_game_paused (u_long *ot, u_long *ot_idx)
+{
+  add_font_tpage_to_ot (ot, ot_idx);
+  draw_ui_score_text (ot, ot_idx, s_score_normal_text);
+
+  AddPrim (&ot[(*ot_idx)], &pf4_pause_overlay);
+  (*ot_idx)++;
 }

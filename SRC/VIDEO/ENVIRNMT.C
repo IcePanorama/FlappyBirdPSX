@@ -4,6 +4,13 @@
 #include "sys/fb_defs.h"
 #include "sys/fb_ints.h"
 
+/* Do not touch! CC seems really particular about the order of these. */
+#include <libgte.h>
+#include <libgpu.h>
+#include <libgs.h>
+#include <libetc.h>
+/******************/
+
 #ifdef DEBUG_BUILD
   #include "video/vid_defs.h"
 
@@ -28,7 +35,7 @@ enum EVTiles_e
  EVT_NUM_TILES
 };
 
-static SPRT ev_background_sprites[EVT_NUM_TILES] = {{0}};
+static SPRT environment_sprites[EVT_NUM_TILES] = {{0}};
 
 void
 ev_init_background (void)
@@ -36,29 +43,29 @@ ev_init_background (void)
   uint8_t i;
   for (i = 0; i < EVT_NUM_TILES; i++)
   {
-    SetSprt(&ev_background_sprites[i]);
-    SetShadeTex(&ev_background_sprites[i], 1);
-    ev_background_sprites[i].clut = texture_clut_lookup[TID_ENV_TEXTURE];
+    SetSprt(&environment_sprites[i]);
+    SetShadeTex(&environment_sprites[i], 1);
+    environment_sprites[i].clut = texture_clut_lookup[TID_ENV_TEXTURE];
   }
 
-  setWH(&ev_background_sprites[0], (TEXTURE_WIDTH),
+  setWH(&environment_sprites[0], (TEXTURE_WIDTH),
         (FB_SCREEN_HEIGHT) - (FB_FOREGROUND_HEIGHT));
-  setWH(&ev_background_sprites[1], (FB_SCREEN_WIDTH) - (TEXTURE_WIDTH),
+  setWH(&environment_sprites[1], (FB_SCREEN_WIDTH) - (TEXTURE_WIDTH),
         (FB_SCREEN_HEIGHT) - (FB_FOREGROUND_HEIGHT));
   for (i = 0; i < EVT_BOT_LEFT; i++)
   {
-    setXY0(&ev_background_sprites[i], (TEXTURE_WIDTH) * i, 0);
-    setUV0(&ev_background_sprites[i], 0, (BACKGROUND_V0));
+    setXY0(&environment_sprites[i], (TEXTURE_WIDTH) * i, 0);
+    setUV0(&environment_sprites[i], 0, (BACKGROUND_V0));
   }
 
-  setWH(&ev_background_sprites[2], (TEXTURE_WIDTH), (FB_FOREGROUND_HEIGHT));
-  setWH(&ev_background_sprites[3], (FB_SCREEN_WIDTH) - (TEXTURE_WIDTH),
+  setWH(&environment_sprites[2], (TEXTURE_WIDTH), (FB_FOREGROUND_HEIGHT));
+  setWH(&environment_sprites[3], (FB_SCREEN_WIDTH) - (TEXTURE_WIDTH),
         (FB_FOREGROUND_HEIGHT));
   for (i = EVT_BOT_LEFT; i < EVT_NUM_TILES; i++)
   {
-    setXY0(&ev_background_sprites[i], (TEXTURE_WIDTH) * (i - EVT_BOT_LEFT),
+    setXY0(&environment_sprites[i], (TEXTURE_WIDTH) * (i - EVT_BOT_LEFT),
            (FB_SCREEN_HEIGHT) - (FB_FOREGROUND_HEIGHT));
-    setUV0(&ev_background_sprites[i], 0, (FOREGROUND_V0));
+    setUV0(&environment_sprites[i], 0, (FOREGROUND_V0));
   }
 }
 
@@ -68,11 +75,11 @@ ev_scroll_environment (void)
 
   uint8_t i;
   for (i = 0; i < EVT_BOT_LEFT; i++)
-    ev_background_sprites[i].u0++;
+    environment_sprites[i].u0++;
 
   /* Processed separately for parallax scrolling effect. */
   for (i = EVT_BOT_LEFT; i < EVT_NUM_TILES; i++)
-    ev_background_sprites[i].u0 += 2;
+    environment_sprites[i].u0 += 2;
 }
 
 void
@@ -81,7 +88,7 @@ ev_reset (void)
 
   uint8_t i;
   for (i = 0; i < EVT_NUM_TILES; i++)
-    ev_background_sprites[i].u0 = 0;
+    environment_sprites[i].u0 = 0;
 }
 
 void
@@ -100,7 +107,7 @@ ev_draw_environment (u_long *ot, u_long *ot_idx)
 #ifdef DEBUG_BUILD
     assert((*ot_idx) < (FB_ORDERING_TABLE_MAX_LENGTH));
 #endif /* DEBUG_BUILD */
-    AddPrim(&ot[(*ot_idx)], &ev_background_sprites[i]);
+    AddPrim(&ot[(*ot_idx)], &environment_sprites[i]);
     (*ot_idx)++;
   }
 }
