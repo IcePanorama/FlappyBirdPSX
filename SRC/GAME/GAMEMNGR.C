@@ -15,9 +15,6 @@
 #include "sys/fb_ints.h"
 #include "video/envirnmt.h"
 
-// tmp
-#define DEBUG_BUILD
-
 #ifdef DEBUG_BUILD
   #include <stdio.h>
   #include <assert.h>
@@ -37,9 +34,6 @@ static void update_col_shapes (Vec2_t *v2_input_pos);
 static void init_compnt_pools (void);
 static void normal_update (void);
 static void end_game (void);
-
-// tmp
-static long _card_event (unsigned long ev0, unsigned long ev1, unsigned long ev2, unsigned long ev3);
 
 void
 gm_init_game (void)
@@ -164,89 +158,4 @@ void
 gm_unpause_game (void)
 {
   gs_set_game_state (GSTATE_NORMAL);
-}
-
-//tmp
-#include <libapi.h>
-#include <sys/file.h>
-#include <libpad.h>
-
-void
-gm_save_game (void)
-{
-  unsigned long ev0, ev1, ev2, ev3;
-  long ret; //, file_desc;
-
-  printf("%s\n", __func__);
-
-  ev0 = OpenEvent (SwCARD, EvSpIOE, EvMdNOINTR, NULL);
-  ev1 = OpenEvent (SwCARD, EvSpERROR, EvMdNOINTR, NULL);
-  ev2 = OpenEvent (SwCARD, EvSpTIMOUT, EvMdNOINTR, NULL);
-  ev3 = OpenEvent (SwCARD, EvSpNEW, EvMdNOINTR, NULL);
-
-  InitCARD (0);
-  PadStopCom ();
-  StartCARD ();
-  _bu_init ();
-
-#ifdef DEBUG_BUILD
-  assert (_card_info (0x00) == 1);
-  ret = _card_event (ev0, ev1, ev2, ev3);
-  printf ("ret: %ld\n", ret);
-
-  if (ret == 1 || ret == 2)
-  {
-    printf("NO CARD or comm. err.\n");
-    assert (0);
-  }
-  else if (ret == 3) // NEWCARD
-  {
-    // Clear event
-    TestEvent (ev0);
-    TestEvent (ev1);
-    TestEvent (ev2);
-    TestEvent (ev3);
-
-    assert (_card_clear (0x00) == 1);
-    ret = _card_event (ev0, ev1, ev2, ev3);
-    printf ("ret: %ld\n", ret);
-  }
-
-  // Clear event
-  TestEvent (ev0);
-  TestEvent (ev1);
-  TestEvent (ev2);
-  TestEvent (ev3);
-
-  // Deliver a TEST FORMAT request.
-  assert (_card_load (0x00) == 1);
-  if (ret == 3) // NEWCARD
-  {
-    printf ("Formatting card...\n");
-    assert (_card_format (0x00) == 1);
-    printf ("Done!\n");
-  }
-#endif /* DEBUG_BUILD */
-
-  StopCARD ();
-  StartPAD ();
-  PadStartCom ();
-}
-
-// FIXME: this func never returns!
-long
-_card_event (unsigned long ev0, unsigned long ev1, unsigned long ev2, unsigned long ev3)
-{
-  printf("%s\n", __func__);
-  while (1)
-  {
-    if (TestEvent (ev0) == 1) // IOE
-      return 0;
-    if (TestEvent (ev1) == 1) // Error
-      return 1;
-    if (TestEvent (ev2) == 1) // Timeout
-      return 2;
-    if (TestEvent (ev3) == 1) // New card
-      return 3;
-  }
 }

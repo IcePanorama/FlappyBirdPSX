@@ -1,3 +1,4 @@
+#include "memcard.h"
 #include "game/gamemngr.h"
 #include "input/controlr.h"
 #include "sys/fb_bools.h"
@@ -16,16 +17,20 @@ static int init_cd (void);
 int
 main (void)
 {
-  init_cd ();
-  r_init_renderer ();
+  if (mc_init () == -1)
+    return -1;
+
   ctrl_init_controllers ();
+  init_cd ();
+
+  r_init_renderer ();
   gm_init_game ();
 
   while (TRUE)
-  {
-    gm_update_game ();
-    r_render_screen ();
-  }
+    {
+      gm_update_game ();
+      r_render_screen ();
+    }
 
   gm_destroy_game ();
 

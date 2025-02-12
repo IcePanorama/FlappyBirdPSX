@@ -1,3 +1,4 @@
+#include "memcard.h"
 #include "utils.h"
 #include "input/cmdlist.h"
 #include "game/gamemngr.h"
@@ -28,7 +29,7 @@ CommandList_t cmdl_gnormal = {
 
 /** Control scheme during `GSTATE_GAME_PAUSED`. */
 Command_t cmd_unpause_game = { (START_BUTTON), &gm_unpause_game };
-Command_t cmd_save_game = { (O_BUTTON), &gm_save_game };
+Command_t cmd_save_game = { (O_BUTTON), &mc_save_game };
 CommandList_t cmdl_gpaused = {
   {&cmd_unpause_game, &cmd_save_game},
   2
