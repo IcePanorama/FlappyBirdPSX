@@ -1,3 +1,7 @@
+/*
+ *  FIXME: need to switch to libmcrd, that's apparently a much less convoluted
+ *  process. See: libref, pp. 192-212.
+ */
 #include "memcard.h"
 
 #include <kernel.h>
@@ -70,15 +74,25 @@ mc_init (void)
 void
 mc_save_game (void)
 {
+  long file_desc;
+  const char *csz_file_name = "bu00:L01";
+
   if (card_setup () != 0)
     goto clean_up;
 
-  // save file i/o goes here!
+#ifdef DEBUG_BUILD
   printf ("Saving...\n");
+#endif /* DEBUG_BUILD */
 
-//TODO: actually save data to mc!
+  erase ((char *)csz_file_name); // don't care if this fails b/c of the next ln
+  file_desc = open ((char *)csz_file_name, O_CREAT);
+//  file_desc = open ((char *)csz_file_name, O_CREAT | (1<<16));
 
+#ifdef DEBUG_BUILD
+  assert (file_desc != -1); // This assert fails
+  assert (close (file_desc) != -1);
   printf ("Done!\n");
+#endif /* DEBUG_BUILD */
 
 clean_up:
   card_clean_up ();
@@ -87,7 +101,7 @@ clean_up:
 int
 card_setup (void)
 {
-  long ret; //, file_desc;
+  long ret;
 
 #ifdef DEBUG_BUILD
   assert (EnableEvent (sw_events[MCSwEV_COMPLETE]) == 1);
@@ -137,7 +151,7 @@ card_setup (void)
   if (_card_load (0x00) != 1) return -1;
 #endif /* not DEBUG_BUILD */
 
-//FIXME: Formatting should done be done automatically, ask user for permission.
+//FIXME: Formatting should NOT be done w/o asking the user for permission first.
   if (ret == MCSwEV_NEW)
     {
 #ifdef DEBUG_BUILD
